@@ -1,0 +1,17 @@
+en:
+  js:
+    sitetor_bds:
+      title: "Property Search"
+      gia: "Price"
+      trieu: "million"
+      mat_tien: "Frontage"
+      dien_tich: "Area"
+      loc: "Filter"
+      xoa_loc: "Reset"
+      tin: "Listing"
+      tags: "Tags"
+      tong: "Found %{count} listings"
+      khong_co: "No listings match the filter."
+      truoc: "‹ Prev"
+      sau: "Next ›"
+      trang: "Page %{page}"

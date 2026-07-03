@@ -1,0 +1,88 @@
+.sitetor-bds {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1em;
+
+  .bds-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    background: var(--primary-very-low);
+    border: 1px solid var(--primary-low);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 1em;
+  }
+
+  .bds-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    label {
+      font-weight: 600;
+      margin: 0 4px 0 0;
+      white-space: nowrap;
+    }
+
+    input {
+      width: 90px;
+      margin: 0;
+    }
+  }
+
+  .bds-total {
+    color: var(--primary-medium);
+  }
+
+  // bảng so sánh — mobile cuộn ngang
+  .bds-table-wrap {
+    overflow-x: auto;
+  }
+
+  .bds-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      border: 1px solid var(--primary-low);
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    th {
+      background: var(--primary-very-low);
+      position: sticky;
+      top: 0;
+    }
+
+    .bds-num {
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bds-title a {
+      color: var(--tertiary);
+    }
+
+    .bds-tag {
+      display: inline-block;
+      background: var(--primary-low);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin: 1px 3px 1px 0;
+      font-size: var(--font-down-2);
+    }
+  }
+
+  .bds-paging {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    margin: 1em 0;
+  }
+}

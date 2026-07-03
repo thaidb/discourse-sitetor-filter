@@ -1,0 +1,17 @@
+vi:
+  js:
+    sitetor_bds:
+      title: "Tìm bất động sản"
+      gia: "Giá"
+      trieu: "triệu"
+      mat_tien: "Mặt tiền"
+      dien_tich: "Diện tích"
+      loc: "Lọc"
+      xoa_loc: "Xóa lọc"
+      tin: "Tin đăng"
+      tags: "Phân loại"
+      tong: "Tìm thấy %{count} tin"
+      khong_co: "Không có tin nào khớp bộ lọc."
+      truoc: "‹ Trước"
+      sau: "Sau ›"
+      trang: "Trang %{page}"

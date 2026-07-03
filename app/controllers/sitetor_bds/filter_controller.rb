@@ -1,0 +1,75 @@
+# frozen_string_literal: true
+
+module SitetorBds
+  class FilterController < ::ApplicationController
+    requires_plugin SitetorBds::PLUGIN_NAME
+
+    # GET /sitetor-bds/filter.json
+    # Params: gia_min, gia_max (VND) | mt_min, mt_max (m) | dt_min, dt_max (m2)
+    #         category_id, page
+    def index
+      page = params[:page].to_i
+      per = SiteSetting.sitetor_bds_page_size
+
+      topics = Topic
+        .visible
+        .listable_topics
+        .where(category_id: allowed_category_ids)
+
+      topics = apply_range(topics, SitetorBds::FIELD_GIA, :gia_min, :gia_max, cast: "bigint")
+      topics = apply_range(topics, SitetorBds::FIELD_MAT_TIEN, :mt_min, :mt_max, cast: "float")
+      topics = apply_range(topics, SitetorBds::FIELD_DIEN_TICH, :dt_min, :dt_max, cast: "float")
+
+      total = topics.count
+      topics = topics.order(bumped_at: :desc).offset(page * per).limit(per)
+
+      render json: {
+        total: total,
+        page: page,
+        topics: topics.map { |t| serialize_topic(t) },
+      }
+    end
+
+    private
+
+    def allowed_category_ids
+      ids = SiteSetting.sitetor_bds_categories.split("|").map(&:to_i)
+      if params[:category_id].present? && ids.include?(params[:category_id].to_i)
+        [params[:category_id].to_i]
+      else
+        ids
+      end
+    end
+
+    def apply_range(scope, field, min_key, max_key, cast:)
+      min = params[min_key]
+      max = params[max_key]
+      return scope if min.blank? && max.blank?
+
+      scope = scope.joins(<<~SQL)
+        INNER JOIN topic_custom_fields tcf_#{field}
+          ON tcf_#{field}.topic_id = topics.id
+          AND tcf_#{field}.name = '#{field}'
+      SQL
+      scope = scope.where("CAST(tcf_#{field}.value AS #{cast}) >= ?", min.to_f) if min.present?
+      scope = scope.where("CAST(tcf_#{field}.value AS #{cast}) <= ?", max.to_f) if max.present?
+      scope
+    end
+
+    def serialize_topic(t)
+      cf = t.custom_fields
+      {
+        id: t.id,
+        title: t.title,
+        slug: t.slug,
+        category_id: t.category_id,
+        created_at: t.created_at,
+        bumped_at: t.bumped_at,
+        tags: t.tags.pluck(:name),
+        gia: cf[SitetorBds::FIELD_GIA]&.to_i,
+        mat_tien: cf[SitetorBds::FIELD_MAT_TIEN]&.to_f,
+        dien_tich: cf[SitetorBds::FIELD_DIEN_TICH]&.to_f,
+      }
+    end
+  end
+end
