@@ -3,7 +3,12 @@ plugins:
     default: true
     client: true
   sitetor_filter_categories:
-    default: "3412|3722|3344|3698"
+    default: "3412|3722"
+    type: list
+    list_type: compact
+    client: true
+  sitetor_filter_demand_categories:
+    default: "3344|3698"
     type: list
     list_type: compact
     client: true

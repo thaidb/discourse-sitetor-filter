@@ -1,4 +1,6 @@
 import { Input } from "@ember/component";
+import { fn } from "@ember/helper";
+import { on } from "@ember/modifier";
 import DButton from "discourse/components/d-button";
 import { i18n } from "discourse-i18n";
 
@@ -18,11 +20,36 @@ function orDash(v) {
   return v ?? "—";
 }
 
+function eq(a, b) {
+  return a === b;
+}
+
 export default <template>
   <div class="sitetor-filter">
-    <h1>{{i18n "sitetor_filter.title"}}</h1>
+    {{! tiêu đề là link reset về /listing gốc }}
+    <h1><a href="/listing" class="bds-home-link">{{i18n "sitetor_filter.title"}}</a></h1>
 
     <div class="bds-filters">
+      <div class="bds-filter-group bds-filter-q">
+        <Input
+          @value={{@controller.fQ}}
+          placeholder={{i18n "sitetor_filter.tu_khoa"}}
+          {{on "keydown" @controller.onQKeydown}}
+        />
+      </div>
+
+      <div class="bds-filter-group">
+        <label>{{i18n "sitetor_filter.loai"}}</label>
+        <select {{on "change" (fn @controller.updateField "fCategoryId")}}>
+          <option value="" selected={{eq @controller.fCategoryId ""}}>
+            {{i18n "sitetor_filter.tat_ca"}}
+          </option>
+          {{#each @controller.categoryOptions as |c|}}
+            <option value={{c.id}} selected={{eq @controller.fCategoryId c.id}}>{{c.name}}</option>
+          {{/each}}
+        </select>
+      </div>
+
       <div class="bds-filter-group">
         <label>{{i18n "sitetor_filter.gia"}} ({{i18n "sitetor_filter.trieu"}})</label>
         <Input @value={{@controller.fGiaMin}} @type="number" placeholder="min" />
@@ -44,6 +71,24 @@ export default <template>
         <Input @value={{@controller.fDtMax}} @type="number" placeholder="max" />
       </div>
 
+      <div class="bds-filter-group">
+        <label>{{i18n "sitetor_filter.sap_xep"}}</label>
+        <select {{on "change" (fn @controller.updateField "fSort")}}>
+          <option value="new" selected={{eq @controller.fSort "new"}}>
+            {{i18n "sitetor_filter.moi_nhat"}}
+          </option>
+          <option value="price_asc" selected={{eq @controller.fSort "price_asc"}}>
+            {{i18n "sitetor_filter.gia_tang"}}
+          </option>
+          <option value="price_desc" selected={{eq @controller.fSort "price_desc"}}>
+            {{i18n "sitetor_filter.gia_giam"}}
+          </option>
+          <option value="area_desc" selected={{eq @controller.fSort "area_desc"}}>
+            {{i18n "sitetor_filter.dt_lon"}}
+          </option>
+        </select>
+      </div>
+
       <DButton
         @action={{@controller.applyFilter}}
         @icon="magnifying-glass"
@@ -53,7 +98,10 @@ export default <template>
       <DButton @action={{@controller.resetFilter}} @label="sitetor_filter.xoa_loc" />
     </div>
 
-    <p class="bds-total">{{i18n "sitetor_filter.tong" count=@controller.total}}</p>
+    <p class="bds-total">
+      {{i18n "sitetor_filter.tong" count=@controller.total}}
+      · {{i18n "sitetor_filter.trang_x_tren_y" page=@controller.currentPage total=@controller.totalPages}}
+    </p>
 
     <div class="bds-table-wrap">
       <table class="bds-table">
@@ -86,13 +134,26 @@ export default <template>
       </table>
     </div>
 
+    {{! phân trang nhảy bước: 1,2,3,4,5 ... 10,15,20 ... 100,200 ... n }}
     <div class="bds-paging">
       <DButton
         @action={{@controller.prevPage}}
         @disabled={{unless @controller.hasPrev true}}
         @label="sitetor_filter.truoc"
       />
-      <span>{{i18n "sitetor_filter.trang" page=@controller.page}}</span>
+      <span class="bds-page-list">
+        {{#each @controller.pageList as |p|}}
+          {{#if p.current}}
+            <span class="bds-page bds-page-current">{{p.num}}</span>
+          {{else}}
+            <button
+              type="button"
+              class="bds-page"
+              {{on "click" (fn @controller.goPage p.num)}}
+            >{{p.num}}</button>
+          {{/if}}
+        {{/each}}
+      </span>
       <DButton
         @action={{@controller.nextPage}}
         @disabled={{unless @controller.hasNext true}}

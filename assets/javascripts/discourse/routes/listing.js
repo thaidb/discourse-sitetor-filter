@@ -3,6 +3,7 @@ import { ajax } from "discourse/lib/ajax";
 
 export default class ListingRoute extends DiscourseRoute {
   queryParams = {
+    q: { refreshModel: true },
     gia_min: { refreshModel: true },
     gia_max: { refreshModel: true },
     mt_min: { refreshModel: true },
@@ -10,6 +11,7 @@ export default class ListingRoute extends DiscourseRoute {
     dt_min: { refreshModel: true },
     dt_max: { refreshModel: true },
     category_id: { refreshModel: true },
+    sort: { refreshModel: true },
     page: { refreshModel: true },
   };
 
