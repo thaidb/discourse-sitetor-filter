@@ -47,7 +47,7 @@ export default class BdsController extends Controller {
   }
 
   get hasNext() {
-    const per = this.siteSettings.sitetor_bds_page_size || 30;
+    const per = this.siteSettings.sitetor_filter_page_size || 30;
     return (this.page + 1) * per < this.total;
   }
 

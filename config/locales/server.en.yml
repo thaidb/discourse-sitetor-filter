@@ -1,6 +1,6 @@
 en:
   site_settings:
-    sitetor_bds_enabled: "Enable Sitetor BDS filter plugin"
-    sitetor_bds_categories: "Category IDs to index for property filtering (pipe-separated)"
-    sitetor_bds_usd_rate: "USD to VND exchange rate used when parsing USD prices"
-    sitetor_bds_page_size: "Number of listings per page on /bds"
+    sitetor_filter_enabled: "Enable Sitetor Filter plugin"
+    sitetor_filter_categories: "Category IDs to index for property filtering (pipe-separated)"
+    sitetor_filter_usd_rate: "USD to VND exchange rate used when parsing USD prices"
+    sitetor_filter_page_size: "Number of listings per page on /bds"

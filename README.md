@@ -1,4 +1,4 @@
-# discourse-sitetor-bds
+# discourse-sitetor-filter
 
 Plugin filter BĐS min/max cho **lms.sitetor.com**: lọc theo **giá / mặt tiền / diện tích**
 trên toàn bộ tin đăng, hiển thị **bảng so sánh** tại trang `/bds`.
@@ -22,7 +22,7 @@ trên toàn bộ tin đăng, hiển thị **bảng so sánh** tại trang `/bds`
    - exec:
        cd: $home/plugins
        cmd:
-         - git clone https://github.com/<ban>/discourse-sitetor-bds.git
+         - git clone https://github.com/<ban>/discourse-sitetor-filter.git
    ```
 
 3. Rebuild:
@@ -32,8 +32,8 @@ trên toàn bộ tin đăng, hiển thị **bảng so sánh** tại trang `/bds`
    ./launcher rebuild app
    ```
 
-4. Vào **Admin → Settings → Plugins**, kiểm tra `sitetor bds enabled` = true và
-   `sitetor bds categories` đúng ID category của bạn
+4. Vào **Admin → Settings → Plugins**, kiểm tra `sitetor filter enabled` = true và
+   `sitetor filter categories` đúng ID category của bạn
    (mặc định: `3412` Cho thuê, `3722` Bán, `3344` Cần thuê, `3698` Cần mua).
 
 5. **Backfill tin cũ** (chạy 1 lần, ~14k tin chỉ vài phút):
@@ -41,7 +41,7 @@ trên toàn bộ tin đăng, hiển thị **bảng so sánh** tại trang `/bds`
    ```bash
    cd /var/discourse
    ./launcher enter app
-   rake sitetor_bds:backfill
+   rake sitetor_filter:backfill
    ```
 
 6. Mở `https://lms.sitetor.com/bds` — lọc thử `Giá 50–100 triệu`, `Mặt tiền ≥ 6m`.

@@ -1,24 +1,24 @@
 # frozen_string_literal: true
 
-module SitetorBds
+module SitetorFilter
   class FilterController < ::ApplicationController
-    requires_plugin SitetorBds::PLUGIN_NAME
+    requires_plugin SitetorFilter::PLUGIN_NAME
 
-    # GET /sitetor-bds/filter.json
+    # GET /sitetor-filter/filter.json
     # Params: gia_min, gia_max (VND) | mt_min, mt_max (m) | dt_min, dt_max (m2)
     #         category_id, page
     def index
       page = params[:page].to_i
-      per = SiteSetting.sitetor_bds_page_size
+      per = SiteSetting.sitetor_filter_page_size
 
       topics = Topic
         .visible
         .listable_topics
         .where(category_id: allowed_category_ids)
 
-      topics = apply_range(topics, SitetorBds::FIELD_GIA, :gia_min, :gia_max, cast: "bigint")
-      topics = apply_range(topics, SitetorBds::FIELD_MAT_TIEN, :mt_min, :mt_max, cast: "float")
-      topics = apply_range(topics, SitetorBds::FIELD_DIEN_TICH, :dt_min, :dt_max, cast: "float")
+      topics = apply_range(topics, SitetorFilter::FIELD_GIA, :gia_min, :gia_max, cast: "bigint")
+      topics = apply_range(topics, SitetorFilter::FIELD_MAT_TIEN, :mt_min, :mt_max, cast: "float")
+      topics = apply_range(topics, SitetorFilter::FIELD_DIEN_TICH, :dt_min, :dt_max, cast: "float")
 
       total = topics.count
       topics = topics.order(bumped_at: :desc).offset(page * per).limit(per)
@@ -33,7 +33,7 @@ module SitetorBds
     private
 
     def allowed_category_ids
-      ids = SiteSetting.sitetor_bds_categories.split("|").map(&:to_i)
+      ids = SiteSetting.sitetor_filter_categories.split("|").map(&:to_i)
       if params[:category_id].present? && ids.include?(params[:category_id].to_i)
         [params[:category_id].to_i]
       else
@@ -66,9 +66,9 @@ module SitetorBds
         created_at: t.created_at,
         bumped_at: t.bumped_at,
         tags: t.tags.pluck(:name),
-        gia: cf[SitetorBds::FIELD_GIA]&.to_i,
-        mat_tien: cf[SitetorBds::FIELD_MAT_TIEN]&.to_f,
-        dien_tich: cf[SitetorBds::FIELD_DIEN_TICH]&.to_f,
+        gia: cf[SitetorFilter::FIELD_GIA]&.to_i,
+        mat_tien: cf[SitetorFilter::FIELD_MAT_TIEN]&.to_f,
+        dien_tich: cf[SitetorFilter::FIELD_DIEN_TICH]&.to_f,
       }
     end
   end

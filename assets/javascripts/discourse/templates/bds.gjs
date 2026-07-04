@@ -19,26 +19,26 @@ function orDash(v) {
 }
 
 export default <template>
-  <div class="sitetor-bds">
-    <h1>{{i18n "sitetor_bds.title"}}</h1>
+  <div class="sitetor-filter">
+    <h1>{{i18n "sitetor_filter.title"}}</h1>
 
     <div class="bds-filters">
       <div class="bds-filter-group">
-        <label>{{i18n "sitetor_bds.gia"}} ({{i18n "sitetor_bds.trieu"}})</label>
+        <label>{{i18n "sitetor_filter.gia"}} ({{i18n "sitetor_filter.trieu"}})</label>
         <Input @value={{@controller.fGiaMin}} @type="number" placeholder="min" />
         <span>–</span>
         <Input @value={{@controller.fGiaMax}} @type="number" placeholder="max" />
       </div>
 
       <div class="bds-filter-group">
-        <label>{{i18n "sitetor_bds.mat_tien"}} (m)</label>
+        <label>{{i18n "sitetor_filter.mat_tien"}} (m)</label>
         <Input @value={{@controller.fMtMin}} @type="number" placeholder="min" />
         <span>–</span>
         <Input @value={{@controller.fMtMax}} @type="number" placeholder="max" />
       </div>
 
       <div class="bds-filter-group">
-        <label>{{i18n "sitetor_bds.dien_tich"}} (m²)</label>
+        <label>{{i18n "sitetor_filter.dien_tich"}} (m²)</label>
         <Input @value={{@controller.fDtMin}} @type="number" placeholder="min" />
         <span>–</span>
         <Input @value={{@controller.fDtMax}} @type="number" placeholder="max" />
@@ -47,23 +47,23 @@ export default <template>
       <DButton
         @action={{@controller.applyFilter}}
         @icon="magnifying-glass"
-        @label="sitetor_bds.loc"
+        @label="sitetor_filter.loc"
         class="btn-primary"
       />
-      <DButton @action={{@controller.resetFilter}} @label="sitetor_bds.xoa_loc" />
+      <DButton @action={{@controller.resetFilter}} @label="sitetor_filter.xoa_loc" />
     </div>
 
-    <p class="bds-total">{{i18n "sitetor_bds.tong" count=@controller.total}}</p>
+    <p class="bds-total">{{i18n "sitetor_filter.tong" count=@controller.total}}</p>
 
     <div class="bds-table-wrap">
       <table class="bds-table">
         <thead>
           <tr>
-            <th>{{i18n "sitetor_bds.tin"}}</th>
-            <th>{{i18n "sitetor_bds.gia"}}</th>
-            <th>{{i18n "sitetor_bds.mat_tien"}}</th>
-            <th>{{i18n "sitetor_bds.dien_tich"}}</th>
-            <th>{{i18n "sitetor_bds.tags"}}</th>
+            <th>{{i18n "sitetor_filter.tin"}}</th>
+            <th>{{i18n "sitetor_filter.gia"}}</th>
+            <th>{{i18n "sitetor_filter.mat_tien"}}</th>
+            <th>{{i18n "sitetor_filter.dien_tich"}}</th>
+            <th>{{i18n "sitetor_filter.tags"}}</th>
           </tr>
         </thead>
         <tbody>
@@ -80,7 +80,7 @@ export default <template>
               </td>
             </tr>
           {{else}}
-            <tr><td colspan="5">{{i18n "sitetor_bds.khong_co"}}</td></tr>
+            <tr><td colspan="5">{{i18n "sitetor_filter.khong_co"}}</td></tr>
           {{/each}}
         </tbody>
       </table>
@@ -90,13 +90,13 @@ export default <template>
       <DButton
         @action={{@controller.prevPage}}
         @disabled={{unless @controller.hasPrev true}}
-        @label="sitetor_bds.truoc"
+        @label="sitetor_filter.truoc"
       />
-      <span>{{i18n "sitetor_bds.trang" page=@controller.page}}</span>
+      <span>{{i18n "sitetor_filter.trang" page=@controller.page}}</span>
       <DButton
         @action={{@controller.nextPage}}
         @disabled={{unless @controller.hasNext true}}
-        @label="sitetor_bds.sau"
+        @label="sitetor_filter.sau"
       />
     </div>
   </div>

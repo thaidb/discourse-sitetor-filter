@@ -1,6 +1,6 @@
 vi:
   js:
-    sitetor_bds:
+    sitetor_filter:
       title: "Tìm bất động sản"
       gia: "Giá"
       trieu: "triệu"
