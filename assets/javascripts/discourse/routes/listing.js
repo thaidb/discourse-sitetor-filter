@@ -4,22 +4,22 @@ import { ajax } from "discourse/lib/ajax";
 export default class ListingRoute extends DiscourseRoute {
   queryParams = {
     q: { refreshModel: true },
-    gia_min: { refreshModel: true },
-    gia_max: { refreshModel: true },
-    mt_min: { refreshModel: true },
-    mt_max: { refreshModel: true },
-    dt_min: { refreshModel: true },
-    dt_max: { refreshModel: true },
+    price_min: { refreshModel: true },
+    price_max: { refreshModel: true },
+    frontage_min: { refreshModel: true },
+    frontage_max: { refreshModel: true },
+    area_min: { refreshModel: true },
+    area_max: { refreshModel: true },
     category_id: { refreshModel: true },
     sort: { refreshModel: true },
     page: { refreshModel: true },
-    loai: { refreshModel: true },
-    vi_tri: { refreshModel: true },
-    huong: { refreshModel: true },
-    tinh: { refreshModel: true },
-    quan: { refreshModel: true },
-    phuong: { refreshModel: true },
-    duong: { refreshModel: true },
+    type: { refreshModel: true },
+    position: { refreshModel: true },
+    direction: { refreshModel: true },
+    province: { refreshModel: true },
+    district: { refreshModel: true },
+    ward: { refreshModel: true },
+    street: { refreshModel: true },
   };
 
   model(params) {
@@ -29,7 +29,7 @@ export default class ListingRoute extends DiscourseRoute {
   setupController(controller, model) {
     super.setupController(controller, model);
     // nạp options cho các dropdown multi-select (1 lần khi vào trang)
-    if (!controller.facets?.loai) {
+    if (!controller.facets?.type) {
       controller.loadFacets();
     }
   }

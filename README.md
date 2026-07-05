@@ -10,7 +10,7 @@ trên toàn bộ tin đăng, hiển thị **bảng so sánh** tại trang `/list
   `DT 100m2`, `5x20`...), lưu vào topic custom fields dạng số.
 - Tin mới / sửa bài đầu → parse tự động (hook `topic_created`, `post_edited`).
 - Tin cũ → backfill 1 lần bằng rake task.
-- API `GET /listing/filter.json?q=&gia_min=&gia_max=&mt_min=&mt_max=&dt_min=&dt_max=&category_id=&sort=&page=`
+- API `GET /listing/filter.json?q=&price_min=&price_max=&frontage_min=&frontage_max=&area_min=&area_max=&category_id=&sort=&page=`
 - Trang `/listing` (chỉ Bán + Cho thuê): từ khóa, loại tin, giá/mặt tiền/diện tích min–max
   (giá nhập theo **triệu**), sắp xếp (mới nhất / giá tăng / giá giảm / DT lớn),
   phân trang nhảy bước `1,2,3,4,5…10,15,20…100,200…n`, bảng so sánh mobile cuộn ngang.

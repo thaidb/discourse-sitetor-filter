@@ -4,7 +4,7 @@ import { service } from "@ember/service";
 import { tracked } from "@glimmer/tracking";
 import { ajax } from "discourse/lib/ajax";
 
-const GIA_UNITS = { trieu: 1e6, ty: 1e9 };
+const PRICE_UNITS = { million: 1e6, billion: 1e9 };
 
 export default class ListingController extends Controller {
   @service siteSettings;
@@ -12,60 +12,60 @@ export default class ListingController extends Controller {
 
   queryParams = [
     "q",
-    "gia_min",
-    "gia_max",
-    "mt_min",
-    "mt_max",
-    "dt_min",
-    "dt_max",
+    "price_min",
+    "price_max",
+    "frontage_min",
+    "frontage_max",
+    "area_min",
+    "area_max",
     "category_id",
     "sort",
     "page",
-    "loai",
-    "vi_tri",
-    "huong",
-    "tinh",
-    "quan",
-    "phuong",
-    "duong",
+    "type",
+    "position",
+    "direction",
+    "province",
+    "district",
+    "ward",
+    "street",
   ];
 
   @tracked q = null;
-  @tracked gia_min = null;
-  @tracked gia_max = null;
-  @tracked mt_min = null;
-  @tracked mt_max = null;
-  @tracked dt_min = null;
-  @tracked dt_max = null;
+  @tracked price_min = null;
+  @tracked price_max = null;
+  @tracked frontage_min = null;
+  @tracked frontage_max = null;
+  @tracked area_min = null;
+  @tracked area_max = null;
   @tracked category_id = null;
   @tracked sort = null;
   @tracked page = 0;
-  @tracked loai = null;
-  @tracked vi_tri = null;
-  @tracked huong = null;
-  @tracked tinh = null;
-  @tracked quan = null;
-  @tracked phuong = null;
-  @tracked duong = null;
+  @tracked type = null;
+  @tracked position = null;
+  @tracked direction = null;
+  @tracked province = null;
+  @tracked district = null;
+  @tracked ward = null;
+  @tracked street = null;
 
   // input tạm — chỉ áp vào queryParams khi bấm Lọc
   @tracked fQ = "";
-  @tracked fGiaMin = "";
-  @tracked fGiaMax = "";
-  @tracked fGiaUnit = "trieu"; // trieu | ty | usd
-  @tracked fMtMin = "";
-  @tracked fMtMax = "";
-  @tracked fDtMin = "";
-  @tracked fDtMax = "";
+  @tracked fPriceMin = "";
+  @tracked fPriceMax = "";
+  @tracked fPriceUnit = "million"; // trieu | ty | usd
+  @tracked fFrontageMin = "";
+  @tracked fFrontageMax = "";
+  @tracked fAreaMin = "";
+  @tracked fAreaMax = "";
   @tracked fCategoryId = "";
   @tracked fSort = "new";
-  @tracked sLoai = [];
-  @tracked sViTri = [];
-  @tracked sHuong = [];
-  @tracked sTinh = [];
-  @tracked sQuan = [];
-  @tracked sPhuong = [];
-  @tracked sDuong = [];
+  @tracked sTypes = [];
+  @tracked sPositions = [];
+  @tracked sDirections = [];
+  @tracked sProvinces = [];
+  @tracked sDistricts = [];
+  @tracked sWards = [];
+  @tracked sStreets = [];
 
   // facets từ /listing/facets.json (phường/đường cascade theo quận đã chọn)
   @tracked facets = {};
@@ -131,8 +131,8 @@ export default class ListingController extends Controller {
 
   async loadFacets() {
     const data = {};
-    if (this.sQuan.length) {
-      data.quan = this.sQuan.join(",");
+    if (this.sDistricts.length) {
+      data.district = this.sDistricts.join(",");
     }
     try {
       this.facets = await ajax("/listing/facets.json", { data });
@@ -141,14 +141,14 @@ export default class ListingController extends Controller {
     }
   }
 
-  giaToVnd(v) {
+  priceToVnd(v) {
     if (v === "" || v === null) {
       return null;
     }
     const rate =
-      this.fGiaUnit === "usd"
+      this.fPriceUnit === "usd"
         ? this.siteSettings.sitetor_listing_usd_rate || 26000
-        : GIA_UNITS[this.fGiaUnit] || 1e6;
+        : PRICE_UNITS[this.fPriceUnit] || 1e6;
     return Number(v) * rate;
   }
 
@@ -167,10 +167,10 @@ export default class ListingController extends Controller {
   @action
   setSelection(name, values) {
     this[name] = values;
-    if (name === "sQuan") {
+    if (name === "sDistricts") {
       // cascade: đổi quận → nạp lại danh sách phường/đường
-      this.sPhuong = [];
-      this.sDuong = [];
+      this.sWards = [];
+      this.sStreets = [];
       this.loadFacets();
     }
   }
@@ -182,21 +182,21 @@ export default class ListingController extends Controller {
     const csv = (arr) => (arr.length ? arr.join(",") : null);
     return {
       q: this.fQ || null,
-      gia_min: this.giaToVnd(this.fGiaMin),
-      gia_max: this.giaToVnd(this.fGiaMax),
-      mt_min: num(this.fMtMin),
-      mt_max: num(this.fMtMax),
-      dt_min: num(this.fDtMin),
-      dt_max: num(this.fDtMax),
+      price_min: this.priceToVnd(this.fPriceMin),
+      price_max: this.priceToVnd(this.fPriceMax),
+      frontage_min: num(this.fFrontageMin),
+      frontage_max: num(this.fFrontageMax),
+      area_min: num(this.fAreaMin),
+      area_max: num(this.fAreaMax),
       category_id: this.fCategoryId || null,
       sort: this.fSort === "new" ? null : this.fSort,
-      loai: csv(this.sLoai),
-      vi_tri: csv(this.sViTri),
-      huong: csv(this.sHuong),
-      tinh: csv(this.sTinh),
-      quan: csv(this.sQuan),
-      phuong: csv(this.sPhuong),
-      duong: csv(this.sDuong),
+      type: csv(this.sTypes),
+      position: csv(this.sPositions),
+      direction: csv(this.sDirections),
+      province: csv(this.sProvinces),
+      district: csv(this.sDistricts),
+      ward: csv(this.sWards),
+      street: csv(this.sStreets),
       page: 0,
     };
   }
@@ -207,12 +207,12 @@ export default class ListingController extends Controller {
       return;
     }
     this.fCategoryId = parsed.category_id ? String(parsed.category_id) : "";
-    this.sLoai = parsed.loai ? [parsed.loai] : [];
-    this.sViTri = parsed.vi_tri ? [parsed.vi_tri] : [];
-    this.sHuong = parsed.huong ? [parsed.huong] : [];
-    this.sQuan = parsed.quan ? [parsed.quan] : [];
-    this.sPhuong = parsed.phuong ? [parsed.phuong] : [];
-    this.sDuong = parsed.duong ? [parsed.duong] : [];
+    this.sTypes = parsed.type ? [parsed.type] : [];
+    this.sPositions = parsed.position ? [parsed.position] : [];
+    this.sDirections = parsed.direction ? [parsed.direction] : [];
+    this.sDistricts = parsed.district ? [parsed.district] : [];
+    this.sWards = parsed.ward ? [parsed.ward] : [];
+    this.sStreets = parsed.street ? [parsed.street] : [];
     this.page = parsed.page || 0;
     this.loadFacets();
   }
@@ -228,17 +228,17 @@ export default class ListingController extends Controller {
   @action
   resetFilter() {
     this.fQ = "";
-    this.fGiaMin = this.fGiaMax = this.fMtMin = this.fMtMax = this.fDtMin = this.fDtMax = "";
-    this.fGiaUnit = "trieu";
+    this.fPriceMin = this.fPriceMax = this.fFrontageMin = this.fFrontageMax = this.fAreaMin = this.fAreaMax = "";
+    this.fPriceUnit = "million";
     this.fCategoryId = "";
     this.fSort = "new";
-    this.sLoai = [];
-    this.sViTri = [];
-    this.sHuong = [];
-    this.sTinh = [];
-    this.sQuan = [];
-    this.sPhuong = [];
-    this.sDuong = [];
+    this.sTypes = [];
+    this.sPositions = [];
+    this.sDirections = [];
+    this.sProvinces = [];
+    this.sDistricts = [];
+    this.sWards = [];
+    this.sStreets = [];
     this.applyFilter();
     this.loadFacets();
   }

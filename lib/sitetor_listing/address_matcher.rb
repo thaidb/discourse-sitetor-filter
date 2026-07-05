@@ -24,21 +24,21 @@ module SitetorListing
       build_indexes
     end
 
-    # @return [Hash] { tinh:, quan:, phuong:, duong:, so_nha: } — giá trị gốc có dấu, nil nếu không thấy
+    # @return [Hash] { province:, district:, ward:, street:, street_number: } — giá trị gốc có dấu, nil nếu không thấy
     def match(text)
       t = " #{normalize(text)} "
 
       district = find_district(t)
       province = find_province(t) || (district && @province_by_id[district["province_id"]])
-      street, so_nha = find_street(t, district)
+      street, street_number = find_street(t, district)
       ward = find_ward(t, district)
 
       {
-        tinh: province && province["name"],
-        quan: district && district["name"],
-        phuong: ward && display_ward(ward),
-        duong: street && street["name"],
-        so_nha: so_nha,
+        province: province && province["name"],
+        district: district && district["name"],
+        ward: ward && display_ward(ward),
+        street: street && street["name"],
+        street_number: street_number,
       }
     end
 
@@ -104,8 +104,8 @@ module SitetorListing
       # ưu tiên đường trong quận đã match; không thấy thì mở rộng toàn TPHCM
       # (nhiều đường chạy qua nhiều quận nhưng DB chỉ gán 1 quận)
       if district
-        street, so_nha = scan_streets(t, street_norms(district["id"]))
-        return [street, so_nha] if street
+        street, street_number = scan_streets(t, street_norms(district["id"]))
+        return [street, street_number] if street
       end
       hcm_ids = @districts.select { |d| d["province_id"] == 50 }.map { |d| d["id"] }
       scan_streets(t, hcm_ids.flat_map { |id| street_norms(id) })
@@ -125,8 +125,8 @@ module SitetorListing
 
       # số nhà: cụm số (có thể 12/34a) đứng ngay trước tên đường
       before = t[0...best_pos]
-      so_nha = before[/(\d+[a-z]?(?:\/\d+[a-z]?)*)\s*(?:duong\s+)?\z/, 1]
-      [best[1], so_nha]
+      street_number = before[/(\d+[a-z]?(?:\/\d+[a-z]?)*)\s*(?:duong\s+)?\z/, 1]
+      [best[1], street_number]
     end
 
     def street_norms(district_id)

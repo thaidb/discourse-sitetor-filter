@@ -3,10 +3,10 @@ import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import DButton from "discourse/components/d-button";
 import { i18n } from "discourse-i18n";
-import BdsMultiSelect from "discourse/plugins/discourse-sitetor-listing/discourse/components/bds-multi-select";
+import MultiSelect from "discourse/plugins/discourse-sitetor-listing/discourse/components/multi-select";
 
 // 25000000 → "25 tr" ; 5500000000 → "5,5 tỷ"
-function formatGia(vnd) {
+function formatPrice(vnd) {
   if (!vnd) {
     return "—";
   }
@@ -28,23 +28,23 @@ function eq(a, b) {
 export default <template>
   <div class="sitetor-listing">
     {{! tiêu đề là link reset về /listing gốc }}
-    <h1><a href="/listing" class="bds-home-link">{{i18n "sitetor_listing.title"}}</a></h1>
+    <h1><a href="/listing" class="listing-home-link">{{i18n "sitetor_listing.title"}}</a></h1>
 
-    <div class="bds-filters">
-      <div class="bds-filter-row">
-        <div class="bds-filter-group bds-filter-q">
+    <div class="listing-filters">
+      <div class="listing-filter-row">
+        <div class="listing-filter-group listing-filter-q">
           <Input
             @value={{@controller.fQ}}
-            placeholder={{i18n "sitetor_listing.tu_khoa"}}
+            placeholder={{i18n "sitetor_listing.search_hint"}}
             {{on "keydown" @controller.onQKeydown}}
           />
         </div>
 
-        <div class="bds-filter-group">
-          <label>{{i18n "sitetor_listing.loai_tin"}}</label>
+        <div class="listing-filter-group">
+          <label>{{i18n "sitetor_listing.category"}}</label>
           <select {{on "change" (fn @controller.updateField "fCategoryId")}}>
             <option value="" selected={{eq @controller.fCategoryId ""}}>
-              {{i18n "sitetor_listing.tat_ca"}}
+              {{i18n "sitetor_listing.all"}}
             </option>
             {{#each @controller.categoryOptions as |c|}}
               <option value={{c.id}} selected={{eq @controller.fCategoryId c.id}}>{{c.name}}</option>
@@ -52,160 +52,160 @@ export default <template>
           </select>
         </div>
 
-        <BdsMultiSelect
-          @label={{i18n "sitetor_listing.loai_san_pham"}}
-          @options={{@controller.facets.loai}}
-          @selected={{@controller.sLoai}}
-          @onChange={{fn @controller.setSelection "sLoai"}}
+        <MultiSelect
+          @label={{i18n "sitetor_listing.product_type"}}
+          @options={{@controller.facets.type}}
+          @selected={{@controller.sTypes}}
+          @onChange={{fn @controller.setSelection "sTypes"}}
         />
-        <BdsMultiSelect
-          @label={{i18n "sitetor_listing.tinh_thanh"}}
-          @options={{@controller.facets.tinh}}
-          @selected={{@controller.sTinh}}
-          @onChange={{fn @controller.setSelection "sTinh"}}
+        <MultiSelect
+          @label={{i18n "sitetor_listing.province"}}
+          @options={{@controller.facets.province}}
+          @selected={{@controller.sProvinces}}
+          @onChange={{fn @controller.setSelection "sProvinces"}}
         />
-        <BdsMultiSelect
-          @label={{i18n "sitetor_listing.quan_huyen"}}
-          @options={{@controller.facets.quan}}
-          @selected={{@controller.sQuan}}
-          @onChange={{fn @controller.setSelection "sQuan"}}
+        <MultiSelect
+          @label={{i18n "sitetor_listing.district"}}
+          @options={{@controller.facets.district}}
+          @selected={{@controller.sDistricts}}
+          @onChange={{fn @controller.setSelection "sDistricts"}}
           @searchable={{true}}
         />
-        <BdsMultiSelect
-          @label={{i18n "sitetor_listing.phuong_xa"}}
-          @options={{@controller.facets.phuong}}
-          @selected={{@controller.sPhuong}}
-          @onChange={{fn @controller.setSelection "sPhuong"}}
+        <MultiSelect
+          @label={{i18n "sitetor_listing.ward"}}
+          @options={{@controller.facets.ward}}
+          @selected={{@controller.sWards}}
+          @onChange={{fn @controller.setSelection "sWards"}}
           @searchable={{true}}
         />
-        <BdsMultiSelect
-          @label={{i18n "sitetor_listing.duong_pho"}}
-          @options={{@controller.facets.duong}}
-          @selected={{@controller.sDuong}}
-          @onChange={{fn @controller.setSelection "sDuong"}}
+        <MultiSelect
+          @label={{i18n "sitetor_listing.street"}}
+          @options={{@controller.facets.street}}
+          @selected={{@controller.sStreets}}
+          @onChange={{fn @controller.setSelection "sStreets"}}
           @searchable={{true}}
         />
-        <BdsMultiSelect
-          @label={{i18n "sitetor_listing.vi_tri"}}
-          @options={{@controller.facets.vi_tri}}
-          @selected={{@controller.sViTri}}
-          @onChange={{fn @controller.setSelection "sViTri"}}
+        <MultiSelect
+          @label={{i18n "sitetor_listing.position"}}
+          @options={{@controller.facets.position}}
+          @selected={{@controller.sPositions}}
+          @onChange={{fn @controller.setSelection "sPositions"}}
         />
-        <BdsMultiSelect
-          @label={{i18n "sitetor_listing.huong"}}
-          @options={{@controller.facets.huong}}
-          @selected={{@controller.sHuong}}
-          @onChange={{fn @controller.setSelection "sHuong"}}
+        <MultiSelect
+          @label={{i18n "sitetor_listing.direction"}}
+          @options={{@controller.facets.direction}}
+          @selected={{@controller.sDirections}}
+          @onChange={{fn @controller.setSelection "sDirections"}}
         />
       </div>
 
-      <div class="bds-filter-row">
-        <div class="bds-filter-group">
-          <label>{{i18n "sitetor_listing.gia"}}</label>
-          <Input @value={{@controller.fGiaMin}} @type="number" placeholder={{i18n "sitetor_listing.tu"}} />
+      <div class="listing-filter-row">
+        <div class="listing-filter-group">
+          <label>{{i18n "sitetor_listing.price"}}</label>
+          <Input @value={{@controller.fPriceMin}} @type="number" placeholder={{i18n "sitetor_listing.from"}} />
           <span>–</span>
-          <Input @value={{@controller.fGiaMax}} @type="number" placeholder={{i18n "sitetor_listing.den"}} />
-          <select {{on "change" (fn @controller.updateField "fGiaUnit")}}>
-            <option value="trieu" selected={{eq @controller.fGiaUnit "trieu"}}>{{i18n "sitetor_listing.trieu"}}</option>
-            <option value="ty" selected={{eq @controller.fGiaUnit "ty"}}>{{i18n "sitetor_listing.ty"}}</option>
-            <option value="usd" selected={{eq @controller.fGiaUnit "usd"}}>USD</option>
+          <Input @value={{@controller.fPriceMax}} @type="number" placeholder={{i18n "sitetor_listing.to"}} />
+          <select {{on "change" (fn @controller.updateField "fPriceUnit")}}>
+            <option value="million" selected={{eq @controller.fPriceUnit "million"}}>{{i18n "sitetor_listing.million"}}</option>
+            <option value="billion" selected={{eq @controller.fPriceUnit "billion"}}>{{i18n "sitetor_listing.billion"}}</option>
+            <option value="usd" selected={{eq @controller.fPriceUnit "usd"}}>USD</option>
           </select>
         </div>
 
-        <div class="bds-filter-group">
-          <label>{{i18n "sitetor_listing.mat_tien"}} (m)</label>
-          <Input @value={{@controller.fMtMin}} @type="number" placeholder="min" />
+        <div class="listing-filter-group">
+          <label>{{i18n "sitetor_listing.frontage"}} (m)</label>
+          <Input @value={{@controller.fFrontageMin}} @type="number" placeholder="min" />
           <span>–</span>
-          <Input @value={{@controller.fMtMax}} @type="number" placeholder="max" />
+          <Input @value={{@controller.fFrontageMax}} @type="number" placeholder="max" />
         </div>
 
-        <div class="bds-filter-group">
-          <label>{{i18n "sitetor_listing.dien_tich"}} (m²)</label>
-          <Input @value={{@controller.fDtMin}} @type="number" placeholder="min" />
+        <div class="listing-filter-group">
+          <label>{{i18n "sitetor_listing.area"}} (m²)</label>
+          <Input @value={{@controller.fAreaMin}} @type="number" placeholder="min" />
           <span>–</span>
-          <Input @value={{@controller.fDtMax}} @type="number" placeholder="max" />
+          <Input @value={{@controller.fAreaMax}} @type="number" placeholder="max" />
         </div>
 
-        <div class="bds-filter-group">
-          <label>{{i18n "sitetor_listing.sap_xep"}}</label>
+        <div class="listing-filter-group">
+          <label>{{i18n "sitetor_listing.sort_by"}}</label>
           <select {{on "change" (fn @controller.updateField "fSort")}}>
-            <option value="new" selected={{eq @controller.fSort "new"}}>{{i18n "sitetor_listing.moi_nhat"}}</option>
-            <option value="price_asc" selected={{eq @controller.fSort "price_asc"}}>{{i18n "sitetor_listing.gia_tang"}}</option>
-            <option value="price_desc" selected={{eq @controller.fSort "price_desc"}}>{{i18n "sitetor_listing.gia_giam"}}</option>
-            <option value="area_desc" selected={{eq @controller.fSort "area_desc"}}>{{i18n "sitetor_listing.dt_lon"}}</option>
+            <option value="new" selected={{eq @controller.fSort "new"}}>{{i18n "sitetor_listing.newest"}}</option>
+            <option value="price_asc" selected={{eq @controller.fSort "price_asc"}}>{{i18n "sitetor_listing.price_asc"}}</option>
+            <option value="price_desc" selected={{eq @controller.fSort "price_desc"}}>{{i18n "sitetor_listing.price_desc"}}</option>
+            <option value="area_desc" selected={{eq @controller.fSort "area_desc"}}>{{i18n "sitetor_listing.area_desc"}}</option>
           </select>
         </div>
 
         <DButton
           @action={{@controller.applyFilter}}
           @icon="magnifying-glass"
-          @label="sitetor_listing.loc"
+          @label="sitetor_listing.apply_filter"
           class="btn-primary"
         />
-        <DButton @action={{@controller.resetFilter}} @label="sitetor_listing.xoa_loc" />
+        <DButton @action={{@controller.resetFilter}} @label="sitetor_listing.reset_filter" />
       </div>
     </div>
 
-    <p class="bds-total">
-      {{i18n "sitetor_listing.tong" count=@controller.total}}
-      · {{i18n "sitetor_listing.trang_x_tren_y" page=@controller.currentPage total=@controller.totalPages}}
+    <p class="listing-total">
+      {{i18n "sitetor_listing.total_found" count=@controller.total}}
+      · {{i18n "sitetor_listing.page_of" page=@controller.currentPage total=@controller.totalPages}}
       {{#if @controller.model.seo_base}}
-        · <a class="bds-seo-link" href="/listing/{{@controller.model.seo_base}}">
-          🔗 {{i18n "sitetor_listing.trang_seo"}}
+        · <a class="listing-seo-link" href="/listing/{{@controller.model.seo_base}}">
+          🔗 {{i18n "sitetor_listing.seo_page"}}
         </a>
       {{/if}}
     </p>
 
-    <div class="bds-table-wrap">
-      <table class="bds-table">
+    <div class="listing-table-wrap">
+      <table class="listing-table">
         <thead>
           <tr>
             <th>ID</th>
-            <th>{{i18n "sitetor_listing.loai_san_pham"}}</th>
-            <th>{{i18n "sitetor_listing.so_nha"}}</th>
-            <th>{{i18n "sitetor_listing.duong_pho"}}</th>
-            <th>{{i18n "sitetor_listing.phuong_xa"}}</th>
-            <th>{{i18n "sitetor_listing.quan_huyen"}}</th>
-            <th>{{i18n "sitetor_listing.gia"}}</th>
-            <th>{{i18n "sitetor_listing.mat_tien"}}</th>
+            <th>{{i18n "sitetor_listing.product_type"}}</th>
+            <th>{{i18n "sitetor_listing.street_number"}}</th>
+            <th>{{i18n "sitetor_listing.street"}}</th>
+            <th>{{i18n "sitetor_listing.ward"}}</th>
+            <th>{{i18n "sitetor_listing.district"}}</th>
+            <th>{{i18n "sitetor_listing.price"}}</th>
+            <th>{{i18n "sitetor_listing.frontage"}}</th>
           </tr>
         </thead>
         <tbody>
           {{#each @controller.topics as |t|}}
             <tr>
-              <td class="bds-num">
+              <td class="listing-num">
                 <a href="/t/{{t.slug}}/{{t.id}}" title={{t.title}}>{{t.id}}</a>
               </td>
-              <td>{{orDash t.loai}}</td>
-              <td class="bds-num">{{orDash t.so_nha}}</td>
-              <td><a href="/t/{{t.slug}}/{{t.id}}" title={{t.title}}>{{orDash t.duong}}</a></td>
-              <td>{{orDash t.phuong}}</td>
-              <td>{{orDash t.quan}}</td>
-              <td class="bds-num">{{formatGia t.gia}}</td>
-              <td class="bds-num">{{orDash t.mat_tien}}</td>
+              <td>{{orDash t.type}}</td>
+              <td class="listing-num">{{orDash t.street_number}}</td>
+              <td><a href="/t/{{t.slug}}/{{t.id}}" title={{t.title}}>{{orDash t.street}}</a></td>
+              <td>{{orDash t.ward}}</td>
+              <td>{{orDash t.district}}</td>
+              <td class="listing-num">{{formatPrice t.price}}</td>
+              <td class="listing-num">{{orDash t.frontage}}</td>
             </tr>
           {{else}}
-            <tr><td colspan="8">{{i18n "sitetor_listing.khong_co"}}</td></tr>
+            <tr><td colspan="8">{{i18n "sitetor_listing.no_results"}}</td></tr>
           {{/each}}
         </tbody>
       </table>
     </div>
 
     {{! phân trang nhảy bước: 1,2,3,4,5 ... 10,15,20 ... 100,200 ... n }}
-    <div class="bds-paging">
+    <div class="listing-paging">
       <DButton
         @action={{@controller.prevPage}}
         @disabled={{unless @controller.hasPrev true}}
-        @label="sitetor_listing.truoc"
+        @label="sitetor_listing.prev"
       />
-      <span class="bds-page-list">
+      <span class="listing-page-list">
         {{#each @controller.pageList as |p|}}
           {{#if p.current}}
-            <span class="bds-page bds-page-current">{{p.num}}</span>
+            <span class="listing-page listing-page-current">{{p.num}}</span>
           {{else}}
             <button
               type="button"
-              class="bds-page"
+              class="listing-page"
               {{on "click" (fn @controller.goPage p.num)}}
             >{{p.num}}</button>
           {{/if}}
@@ -214,7 +214,7 @@ export default <template>
       <DButton
         @action={{@controller.nextPage}}
         @disabled={{unless @controller.hasNext true}}
-        @label="sitetor_listing.sau"
+        @label="sitetor_listing.next"
       />
     </div>
   </div>

@@ -5,7 +5,7 @@ module SitetorListing
     requires_plugin SitetorListing::PLUGIN_NAME
 
     # GET /listing/filter.json
-    # Cách 1 (UI): q, gia_min/max, mt_min/max, dt_min/max, loai/quan/... (CSV), category_id, sort, page
+    # Cách 1 (UI): q, price_min/max, frontage_min/max, area_min/max, loai/quan/... (CSV), category_id, sort, page
     # Cách 2 (SEO): path=ban/nha-mat-pho/quan-3/duong-vo-van-tan — parse thành bộ lọc
     def index
       per = SiteSetting.sitetor_listing_page_size
@@ -36,24 +36,24 @@ module SitetorListing
     def facets
       base = Topic.visible.listable_topics.where(category_id: allowed_ids(nil))
 
-      quan_filter = csv_param(:quan)
+      district_filter = csv_param(:district)
       cascade = {}
-      if quan_filter.any?
-        cascade_scope = SitetorListing::TopicFilter.by_field(base, SitetorListing::FIELD_QUAN, quan_filter)
+      if district_filter.any?
+        cascade_scope = SitetorListing::TopicFilter.by_field(base, SitetorListing::FIELD_DISTRICT, district_filter)
         cascade = {
-          phuong: facet_counts(cascade_scope, SitetorListing::FIELD_PHUONG),
-          duong: facet_counts(cascade_scope, SitetorListing::FIELD_DUONG),
+          ward: facet_counts(cascade_scope, SitetorListing::FIELD_WARD),
+          street: facet_counts(cascade_scope, SitetorListing::FIELD_STREET),
         }
       end
 
       render json: {
-        loai: facet_counts(base, SitetorListing::FIELD_LOAI),
-        vi_tri: facet_counts(base, SitetorListing::FIELD_VI_TRI),
-        huong: facet_counts(base, SitetorListing::FIELD_HUONG),
-        tinh: facet_counts(base, SitetorListing::FIELD_TINH),
-        quan: facet_counts(base, SitetorListing::FIELD_QUAN),
-        phuong: cascade[:phuong] || [],
-        duong: cascade[:duong] || [],
+        type: facet_counts(base, SitetorListing::FIELD_TYPE),
+        position: facet_counts(base, SitetorListing::FIELD_POSITION),
+        direction: facet_counts(base, SitetorListing::FIELD_DIRECTION),
+        province: facet_counts(base, SitetorListing::FIELD_PROVINCE),
+        district: facet_counts(base, SitetorListing::FIELD_DISTRICT),
+        ward: cascade[:ward] || [],
+        street: cascade[:street] || [],
       }
     end
 
@@ -88,9 +88,9 @@ module SitetorListing
     def filters_from_params
       {
         q: params[:q],
-        gia_min: params[:gia_min], gia_max: params[:gia_max],
-        mt_min: params[:mt_min], mt_max: params[:mt_max],
-        dt_min: params[:dt_min], dt_max: params[:dt_max],
+        price_min: params[:price_min], price_max: params[:price_max],
+        frontage_min: params[:frontage_min], frontage_max: params[:frontage_max],
+        area_min: params[:area_min], area_max: params[:area_max],
         multi: SitetorListing::MULTI_FILTERS.keys.to_h { |k| [k, csv_param(k)] },
         sort: params[:sort],
         page: params[:page].to_i,
@@ -100,7 +100,7 @@ module SitetorListing
 
     def filters_from_parsed(parsed)
       multi = {}
-      %i[loai vi_tri huong quan phuong duong].each do |k|
+      %i[type position direction district ward street].each do |k|
         multi[k.to_s] = parsed[k] ? [parsed[k]] : []
       end
       {
@@ -111,13 +111,13 @@ module SitetorListing
     end
 
     def public_parsed(parsed)
-      parsed.slice(:loai, :vi_tri, :huong, :quan, :phuong, :duong, :category_id).merge(page: parsed[:page].to_i)
+      parsed.slice(:type, :position, :direction, :district, :ward, :street, :category_id).merge(page: parsed[:page].to_i)
     end
 
     # đường dẫn SEO (không gồm trang) khi bộ lọc quy về được 1 giá trị mỗi chiều
     def seo_singles(f)
       return nil if f[:q].present?
-      return nil if %i[gia_min gia_max mt_min mt_max dt_min dt_max].any? { |k| f[k].present? }
+      return nil if %i[price_min price_max frontage_min frontage_max area_min area_max].any? { |k| f[k].present? }
 
       singles = {}
       (f[:multi] || {}).each do |k, values|
@@ -132,7 +132,7 @@ module SitetorListing
       singles = seo_singles(f)
       return nil unless singles
       cat = f[:category_id].present? ? base_categories.find { |c| c.id == f[:category_id].to_i } : nil
-      seo_slugs.build(category_slug: cat&.slug, **singles.slice(:loai, :vi_tri, :huong, :quan, :phuong, :duong))
+      seo_slugs.build(category_slug: cat&.slug, **singles.slice(:type, :position, :direction, :district, :ward, :street))
     end
 
     def seo_title_for(f)
@@ -142,7 +142,7 @@ module SitetorListing
       seo_slugs.title(
         category_name: cat&.name,
         page: f[:page].to_i,
-        **singles.slice(:loai, :vi_tri, :huong, :quan, :phuong, :duong),
+        **singles.slice(:type, :position, :direction, :district, :ward, :street),
       )
     end
 

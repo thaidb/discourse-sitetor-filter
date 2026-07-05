@@ -1,11 +1,11 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
-import GioiThieuListingModal from "discourse/plugins/discourse-sitetor-listing/discourse/components/modal/gioi-thieu-listing";
+import RecommendListingModal from "discourse/plugins/discourse-sitetor-listing/discourse/components/modal/recommend-listing";
 
 // Nút "Giới thiệu BĐS của bạn" dưới chân topic Cần mua / Cần thuê:
 // mở modal chọn 1 listing trong tài khoản → tạo reply gắn link vào nhu cầu.
 export default {
-  name: "sitetor-listing-gioi-thieu",
+  name: "sitetor-listing-recommend",
 
   initialize(container) {
     const siteSettings = container.lookup("service:site-settings");
@@ -20,14 +20,14 @@ export default {
 
     withPluginApi((api) => {
       api.registerTopicFooterButton({
-        id: "gioi-thieu-listing",
+        id: "recommend-listing",
         icon: "reply",
         priority: 240,
         translatedLabel() {
-          return i18n("sitetor_listing.gioi_thieu");
+          return i18n("sitetor_listing.recommend");
         },
         translatedTitle() {
-          return i18n("sitetor_listing.gioi_thieu");
+          return i18n("sitetor_listing.recommend");
         },
         displayed() {
           return (
@@ -37,7 +37,7 @@ export default {
         action() {
           container
             .lookup("service:modal")
-            .show(GioiThieuListingModal, { model: { topic: this.topic } });
+            .show(RecommendListingModal, { model: { topic: this.topic } });
         },
       });
     });

@@ -14,7 +14,7 @@ import { i18n } from "discourse-i18n";
 // Modal "Giới thiệu listing": liệt kê tin đăng của chính user trong các
 // category listing (Bán/Cho thuê), chọn 1 tin → tạo reply gắn link vào
 // topic nhu cầu (Discourse tự onebox link thành card).
-export default class GioiThieuListingModal extends Component {
+export default class RecommendListingModal extends Component {
   @service currentUser;
   @service siteSettings;
 
@@ -65,7 +65,7 @@ export default class GioiThieuListingModal extends Component {
         type: "POST",
         data: {
           topic_id: this.args.model.topic.id,
-          raw: `${i18n("sitetor_listing.gioi_thieu")}:\n\n${window.location.origin}/t/${chosen.slug}/${chosen.id}`,
+          raw: `${i18n("sitetor_listing.recommend")}:\n\n${window.location.origin}/t/${chosen.slug}/${chosen.id}`,
         },
       });
       this.args.closeModal();
@@ -79,16 +79,16 @@ export default class GioiThieuListingModal extends Component {
 
   <template>
     <DModal
-      @title={{i18n "sitetor_listing.gioi_thieu_title"}}
+      @title={{i18n "sitetor_listing.recommend_title"}}
       @closeModal={{@closeModal}}
-      class="gioi-thieu-modal"
+      class="recommend-modal"
     >
       <:body>
         {{#if (eq this.listings null)}}
           <p>…</p>
         {{else if this.listings.length}}
-          <p>{{i18n "sitetor_listing.gioi_thieu_hint"}}</p>
-          <ul class="gioi-thieu-list">
+          <p>{{i18n "sitetor_listing.recommend_hint"}}</p>
+          <ul class="recommend-list">
             {{#each this.listings as |t|}}
               <li>
                 <label>
@@ -104,17 +104,17 @@ export default class GioiThieuListingModal extends Component {
             {{/each}}
           </ul>
         {{else}}
-          <p>{{i18n "sitetor_listing.gioi_thieu_khong_co"}}</p>
+          <p>{{i18n "sitetor_listing.recommend_empty"}}</p>
         {{/if}}
       </:body>
       <:footer>
         <DButton
           @action={{this.send}}
-          @label="sitetor_listing.gioi_thieu_gui"
+          @label="sitetor_listing.recommend_send"
           @disabled={{this.saving}}
           class="btn-primary"
         />
-        <DButton @action={{@closeModal}} @label="sitetor_listing.dong" />
+        <DButton @action={{@closeModal}} @label="sitetor_listing.close" />
       </:footer>
     </DModal>
   </template>

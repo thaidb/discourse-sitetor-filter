@@ -5,15 +5,15 @@
 module SitetorListing
   module TopicFilter
     SORTS = {
-      "price_asc" => [SitetorListing::FIELD_GIA, "ASC"],
-      "price_desc" => [SitetorListing::FIELD_GIA, "DESC"],
-      "area_desc" => [SitetorListing::FIELD_DIEN_TICH, "DESC"],
+      "price_asc" => [SitetorListing::FIELD_PRICE, "ASC"],
+      "price_desc" => [SitetorListing::FIELD_PRICE, "DESC"],
+      "area_desc" => [SitetorListing::FIELD_AREA, "DESC"],
     }.freeze
 
     module_function
 
-    # f: { q:, gia_min:, gia_max:, mt_min:, mt_max:, dt_min:, dt_max:,
-    #      multi: {"loai"=>["Nhà mặt phố"], ...}, sort:, page: }
+    # f: { q:, price_min:, price_max:, frontage_min:, frontage_max:, area_min:, area_max:,
+    #      multi: {"type"=>["Nhà mặt phố"], ...}, sort:, page: }
     def run(f, category_ids, per:)
       scope = Topic.visible.listable_topics.where(category_id: category_ids)
 
@@ -21,9 +21,9 @@ module SitetorListing
         scope = scope.where("topics.title ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(f[:q])}%")
       end
 
-      scope = range(scope, SitetorListing::FIELD_GIA, f[:gia_min], f[:gia_max])
-      scope = range(scope, SitetorListing::FIELD_MAT_TIEN, f[:mt_min], f[:mt_max])
-      scope = range(scope, SitetorListing::FIELD_DIEN_TICH, f[:dt_min], f[:dt_max])
+      scope = range(scope, SitetorListing::FIELD_PRICE, f[:price_min], f[:price_max])
+      scope = range(scope, SitetorListing::FIELD_FRONTAGE, f[:frontage_min], f[:frontage_max])
+      scope = range(scope, SitetorListing::FIELD_AREA, f[:area_min], f[:area_max])
 
       (f[:multi] || {}).each do |param, values|
         field = SitetorListing::MULTI_FILTERS[param]
@@ -82,17 +82,17 @@ module SitetorListing
         created_at: t.created_at,
         bumped_at: t.bumped_at,
         tags: t.tags.pluck(:name),
-        gia: cf[SitetorListing::FIELD_GIA]&.to_i,
-        mat_tien: cf[SitetorListing::FIELD_MAT_TIEN]&.to_f,
-        dien_tich: cf[SitetorListing::FIELD_DIEN_TICH]&.to_f,
-        loai: cf[SitetorListing::FIELD_LOAI],
-        vi_tri: cf[SitetorListing::FIELD_VI_TRI],
-        huong: cf[SitetorListing::FIELD_HUONG],
-        so_nha: cf[SitetorListing::FIELD_SO_NHA],
-        duong: cf[SitetorListing::FIELD_DUONG],
-        phuong: cf[SitetorListing::FIELD_PHUONG],
-        quan: cf[SitetorListing::FIELD_QUAN],
-        tinh: cf[SitetorListing::FIELD_TINH],
+        price: cf[SitetorListing::FIELD_PRICE]&.to_i,
+        frontage: cf[SitetorListing::FIELD_FRONTAGE]&.to_f,
+        area: cf[SitetorListing::FIELD_AREA]&.to_f,
+        type: cf[SitetorListing::FIELD_TYPE],
+        position: cf[SitetorListing::FIELD_POSITION],
+        direction: cf[SitetorListing::FIELD_DIRECTION],
+        street_number: cf[SitetorListing::FIELD_STREET_NUMBER],
+        street: cf[SitetorListing::FIELD_STREET],
+        ward: cf[SitetorListing::FIELD_WARD],
+        district: cf[SitetorListing::FIELD_DISTRICT],
+        province: cf[SitetorListing::FIELD_PROVINCE],
       }
     end
   end

@@ -4,7 +4,7 @@
 # loại sản phẩm, vị trí, hướng. Pure Ruby, test độc lập.
 module SitetorListing
   module Attributes
-    LOAI = [
+    TYPES = [
       ["Văn phòng", /van\s*phong|office/],
       ["Kho, nhà xưởng", /\bkho\b|nha\s*xuong|\bxuong\b/],
       ["Căn hộ, chung cư", /can\s*ho|chung\s*cu|apartment|studio/],
@@ -14,7 +14,7 @@ module SitetorListing
       ["Nhà hẻm", /\bhem\b|\bhxh\b|\bngo\b|trong\s*hem/],
     ].freeze
 
-    VI_TRI = [
+    POSITIONS = [
       ["Khu Compound", /compound/],
       ["Đường Nội Bộ", /noi\s*bo/],
       ["Mặt tiền", /mat\s*tien|mat\s*pho|mat\s*duong|\bmt\b/],
@@ -22,7 +22,7 @@ module SitetorListing
     ].freeze
 
     # đa từ trước, đơn từ sau; yêu cầu có chữ "hướng" đứng trước để tránh nhầm
-    HUONG = [
+    DIRECTIONS = [
       ["Đông Nam", /huong\s*dong\s*nam/],
       ["Đông Bắc", /huong\s*dong\s*bac/],
       ["Tây Nam", /huong\s*tay\s*nam/],
@@ -42,9 +42,9 @@ module SitetorListing
     def extract(text)
       t = normalize(text)
       {
-        loai: LOAI.find { |_, re| t =~ re }&.first,
-        vi_tri: VI_TRI.find { |_, re| t =~ re }&.first,
-        huong: HUONG.find { |_, re| t =~ re }&.first,
+        type: TYPES.find { |_, re| t =~ re }&.first,
+        position: POSITIONS.find { |_, re| t =~ re }&.first,
+        direction: DIRECTIONS.find { |_, re| t =~ re }&.first,
       }
     end
   end

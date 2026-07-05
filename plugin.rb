@@ -2,7 +2,7 @@
 
 # name: discourse-sitetor-listing
 # about: Filter BĐS đa tiêu chí (giá, mặt tiền, diện tích, loại SP, địa chỉ) + bảng so sánh cho Sitetor LMS
-# version: 0.2.0
+# version: 0.4.0
 # authors: Sitetor
 # url: https://lms.sitetor.com
 
@@ -12,40 +12,40 @@ register_asset "stylesheets/sitetor-listing.scss"
 
 module ::SitetorListing
   PLUGIN_NAME = "discourse-sitetor-listing"
-  FIELD_GIA = "bds_gia"
-  FIELD_MAT_TIEN = "bds_mat_tien"
-  FIELD_DIEN_TICH = "bds_dien_tich"
+  FIELD_PRICE = "listing_price"
+  FIELD_FRONTAGE = "listing_frontage"
+  FIELD_AREA = "listing_area"
 
   # field dạng chuỗi (parse từ tiêu đề + bài viết bằng catalog địa chỉ CRM)
-  FIELD_LOAI = "bds_loai"
-  FIELD_VI_TRI = "bds_vi_tri"
-  FIELD_HUONG = "bds_huong"
-  FIELD_SO_NHA = "bds_so_nha"
-  FIELD_DUONG = "bds_duong"
-  FIELD_PHUONG = "bds_phuong"
-  FIELD_QUAN = "bds_quan"
-  FIELD_TINH = "bds_tinh"
+  FIELD_TYPE = "listing_type"
+  FIELD_POSITION = "listing_position"
+  FIELD_DIRECTION = "listing_direction"
+  FIELD_STREET_NUMBER = "listing_street_number"
+  FIELD_STREET = "listing_street"
+  FIELD_WARD = "listing_ward"
+  FIELD_DISTRICT = "listing_district"
+  FIELD_PROVINCE = "listing_province"
 
   STRING_FIELDS = [
-    FIELD_LOAI,
-    FIELD_VI_TRI,
-    FIELD_HUONG,
-    FIELD_SO_NHA,
-    FIELD_DUONG,
-    FIELD_PHUONG,
-    FIELD_QUAN,
-    FIELD_TINH,
+    FIELD_TYPE,
+    FIELD_POSITION,
+    FIELD_DIRECTION,
+    FIELD_STREET_NUMBER,
+    FIELD_STREET,
+    FIELD_WARD,
+    FIELD_DISTRICT,
+    FIELD_PROVINCE,
   ].freeze
 
   # các field cho phép filter dạng multi-select (param → field)
   MULTI_FILTERS = {
-    "loai" => FIELD_LOAI,
-    "vi_tri" => FIELD_VI_TRI,
-    "huong" => FIELD_HUONG,
-    "duong" => FIELD_DUONG,
-    "phuong" => FIELD_PHUONG,
-    "quan" => FIELD_QUAN,
-    "tinh" => FIELD_TINH,
+    "type" => FIELD_TYPE,
+    "position" => FIELD_POSITION,
+    "direction" => FIELD_DIRECTION,
+    "street" => FIELD_STREET,
+    "ward" => FIELD_WARD,
+    "district" => FIELD_DISTRICT,
+    "province" => FIELD_PROVINCE,
   }.freeze
 end
 
@@ -72,9 +72,9 @@ after_initialize do
   end
 
   # Custom fields dạng số trên topic
-  register_topic_custom_field_type(SitetorListing::FIELD_GIA, :integer)
-  register_topic_custom_field_type(SitetorListing::FIELD_MAT_TIEN, :float)
-  register_topic_custom_field_type(SitetorListing::FIELD_DIEN_TICH, :float)
+  register_topic_custom_field_type(SitetorListing::FIELD_PRICE, :integer)
+  register_topic_custom_field_type(SitetorListing::FIELD_FRONTAGE, :float)
+  register_topic_custom_field_type(SitetorListing::FIELD_AREA, :float)
   SitetorListing::STRING_FIELDS.each { |f| register_topic_custom_field_type(f, :string) }
 
   # Tự động parse khi có topic mới / sửa bài đầu trong các category cấu hình
@@ -105,21 +105,21 @@ after_initialize do
       # gán field từ text — dùng chung cho hook realtime và rake backfill
       def self.apply(topic, text)
         parsed = SitetorListing::Parser.parse(text, usd_rate: SiteSetting.sitetor_listing_usd_rate)
-        topic.custom_fields[FIELD_GIA] = parsed[:gia] if parsed[:gia]
-        topic.custom_fields[FIELD_MAT_TIEN] = parsed[:mat_tien] if parsed[:mat_tien]
-        topic.custom_fields[FIELD_DIEN_TICH] = parsed[:dien_tich] if parsed[:dien_tich]
+        topic.custom_fields[FIELD_PRICE] = parsed[:price] if parsed[:price]
+        topic.custom_fields[FIELD_FRONTAGE] = parsed[:frontage] if parsed[:frontage]
+        topic.custom_fields[FIELD_AREA] = parsed[:area] if parsed[:area]
 
         attrs = SitetorListing::Attributes.extract(text)
-        topic.custom_fields[FIELD_LOAI] = attrs[:loai] if attrs[:loai]
-        topic.custom_fields[FIELD_VI_TRI] = attrs[:vi_tri] if attrs[:vi_tri]
-        topic.custom_fields[FIELD_HUONG] = attrs[:huong] if attrs[:huong]
+        topic.custom_fields[FIELD_TYPE] = attrs[:type] if attrs[:type]
+        topic.custom_fields[FIELD_POSITION] = attrs[:position] if attrs[:position]
+        topic.custom_fields[FIELD_DIRECTION] = attrs[:direction] if attrs[:direction]
 
         addr = SitetorListing::AddressMatcher.default.match(text)
-        topic.custom_fields[FIELD_SO_NHA] = addr[:so_nha] if addr[:so_nha]
-        topic.custom_fields[FIELD_DUONG] = addr[:duong] if addr[:duong]
-        topic.custom_fields[FIELD_PHUONG] = addr[:phuong] if addr[:phuong]
-        topic.custom_fields[FIELD_QUAN] = addr[:quan] if addr[:quan]
-        topic.custom_fields[FIELD_TINH] = addr[:tinh] if addr[:tinh]
+        topic.custom_fields[FIELD_STREET_NUMBER] = addr[:street_number] if addr[:street_number]
+        topic.custom_fields[FIELD_STREET] = addr[:street] if addr[:street]
+        topic.custom_fields[FIELD_WARD] = addr[:ward] if addr[:ward]
+        topic.custom_fields[FIELD_DISTRICT] = addr[:district] if addr[:district]
+        topic.custom_fields[FIELD_PROVINCE] = addr[:province] if addr[:province]
 
         parsed.values.any? || attrs.values.any? || addr.values.any?
       end

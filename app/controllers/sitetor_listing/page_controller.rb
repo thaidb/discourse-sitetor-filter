@@ -42,25 +42,25 @@ module SitetorListing
       cat = parsed[:category_id] && base_categories.find { |c| c.id == parsed[:category_id] }
 
       multi = {}
-      %i[loai vi_tri huong quan phuong duong].each { |k| multi[k.to_s] = parsed[k] ? [parsed[k]] : [] }
+      %i[type position direction district ward street].each { |k| multi[k.to_s] = parsed[k] ? [parsed[k]] : [] }
       ids = SitetorListing.with_descendants(cat ? [cat.id] : base_categories.map(&:id))
       result = SitetorListing::TopicFilter.run({ multi: multi, page: page }, ids, per: per)
 
       title_core = slugs.title(
         category_name: cat&.name, page: page,
-        **parsed.slice(:loai, :vi_tri, :huong, :quan, :phuong, :duong),
+        **parsed.slice(:type, :position, :direction, :district, :ward, :street),
       )
       base_path = slugs.build(
         category_slug: cat&.slug,
-        **parsed.slice(:loai, :vi_tri, :huong, :quan, :phuong, :duong),
+        **parsed.slice(:type, :position, :direction, :district, :ward, :street),
       )
       canonical = "#{Discourse.base_url}/listing/#{base_path}#{page > 0 ? "/trang-#{page + 1}" : ""}"
       e = ->(s) { ERB::Util.html_escape(s.to_s) }
 
       items = result[:topics].map do |t|
         row = SitetorListing::TopicFilter.serialize(t)
-        gia = row[:gia] ? (row[:gia] >= 1e9 ? "#{(row[:gia] / 1e9.to_f).round(2)} tỷ" : "#{(row[:gia] / 1e6.to_f).round(1)} triệu") : nil
-        meta = [row[:loai], row[:duong] && "đường #{row[:duong]}", row[:quan], gia, row[:dien_tich] && "#{row[:dien_tich]} m²"].compact.join(" · ")
+        price = row[:price] ? (row[:price] >= 1e9 ? "#{(row[:price] / 1e9.to_f).round(2)} tỷ" : "#{(row[:price] / 1e6.to_f).round(1)} triệu") : nil
+        meta = [row[:type], row[:street] && "đường #{row[:street]}", row[:district], price, row[:area] && "#{row[:area]} m²"].compact.join(" · ")
         "<li><a href=\"#{Discourse.base_url}/t/#{e.call(t.slug)}/#{t.id}\">#{e.call(t.title)}</a>#{meta.present? ? " — #{e.call(meta)}" : ""}</li>"
       end
 
