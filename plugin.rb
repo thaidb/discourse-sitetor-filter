@@ -73,8 +73,13 @@ after_initialize do
 
   module ::SitetorFilter
     module Extract
+      # parse cả listing (Bán/Cho thuê) lẫn nhu cầu (Cần mua/Cần thuê) —
+      # dữ liệu nhu cầu phục vụ plugin discourse-sitetor-mapping (/mapping)
       def self.category_ids
-        SiteSetting.sitetor_filter_categories.split("|").map(&:to_i)
+        (
+          SiteSetting.sitetor_filter_categories.split("|") +
+            SiteSetting.sitetor_filter_demand_categories.split("|")
+        ).map(&:to_i).uniq
       end
 
       def self.from_post(post)
