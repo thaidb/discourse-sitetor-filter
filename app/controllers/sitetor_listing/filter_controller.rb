@@ -142,7 +142,7 @@ module SitetorListing
       seo_slugs.title(
         category_name: cat&.name,
         page: f[:page].to_i,
-        **singles.slice(:type, :position, :direction, :district, :ward, :street),
+        **singles.slice(:type, :position, :direction, :district, :ward, :street, :province),
       )
     end
 

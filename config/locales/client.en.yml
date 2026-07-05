@@ -2,6 +2,12 @@ en:
   js:
     sitetor_listing:
       title: "Property Search"
+      edit_info: "Update property info"
+      edit_info_title: "Property info for this topic"
+      edit_info_hint: "Enter structured values so this topic shows correctly in the /listing and /mapping filters. Leave blank to clear."
+      edit_info_note: "Note: after saving, the parser will NOT overwrite these values — your input is authoritative."
+      edit_info_save: "Save"
+      edit_info_saved: "Saved! Filters use the new values immediately."
       seo_page: "SEO page for this filter"
       category: "Category"
       product_type: "Product Type"
@@ -38,6 +44,8 @@ en:
       no_results: "No listings match the filter."
       prev: "‹ Prev"
       next: "Next ›"
+      go_to_page: "Go to page"
+      go: "Go"
       page: "Page %{page}"
       recommend: "Recommend your listing"
       recommend_title: "Pick a listing to recommend"

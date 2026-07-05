@@ -69,6 +69,7 @@ export default class ListingController extends Controller {
 
   // facets từ /listing/facets.json (phường/đường cascade theo quận đã chọn)
   @tracked facets = {};
+  @tracked fGotoPage = "";
 
   get topics() {
     return this.model?.topics || [];
@@ -241,6 +242,20 @@ export default class ListingController extends Controller {
     this.sStreets = [];
     this.applyFilter();
     this.loadFacets();
+  }
+
+  @action
+  updateGotoPage(event) {
+    this.fGotoPage = event.target.value;
+  }
+
+  @action
+  gotoPage() {
+    const n = parseInt(this.fGotoPage, 10);
+    if (!isNaN(n)) {
+      this.goPage(Math.min(Math.max(n, 1), this.totalPages));
+      this.fGotoPage = "";
+    }
   }
 
   @action

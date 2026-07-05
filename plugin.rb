@@ -26,6 +26,9 @@ module ::SitetorListing
   FIELD_DISTRICT = "listing_district"
   FIELD_PROVINCE = "listing_province"
 
+  # cờ "chủ topic đã nhập tay" — parser/backfill không được ghi đè
+  FIELD_MANUAL = "listing_manual"
+
   STRING_FIELDS = [
     FIELD_TYPE,
     FIELD_POSITION,
@@ -35,6 +38,7 @@ module ::SitetorListing
     FIELD_WARD,
     FIELD_DISTRICT,
     FIELD_PROVINCE,
+    FIELD_MANUAL,
   ].freeze
 
   # các field cho phép filter dạng multi-select (param → field)
@@ -102,8 +106,11 @@ after_initialize do
         topic.save_custom_fields(true)
       end
 
-      # gán field từ text — dùng chung cho hook realtime và rake backfill
+      # gán field từ text — dùng chung cho hook realtime và rake backfill.
+      # Topic chủ nhà đã nhập tay (FIELD_MANUAL) thì parser không ghi đè.
       def self.apply(topic, text)
+        return false if topic.custom_fields[FIELD_MANUAL] == "true"
+
         parsed = SitetorListing::Parser.parse(text, usd_rate: SiteSetting.sitetor_listing_usd_rate)
         topic.custom_fields[FIELD_PRICE] = parsed[:price] if parsed[:price]
         topic.custom_fields[FIELD_FRONTAGE] = parsed[:frontage] if parsed[:frontage]
@@ -136,10 +143,14 @@ after_initialize do
   require_relative "app/controllers/sitetor_listing/page_controller"
   require_relative "app/controllers/sitetor_listing/filter_controller"
 
+  require_relative "app/controllers/sitetor_listing/topic_info_controller"
+
   SitetorListing::Engine.routes.draw do
     get "/" => "page#index"
     get "/filter" => "filter#index"
     get "/facets" => "filter#facets"
+    get "/topic-info" => "topic_info#show"
+    put "/topic-info" => "topic_info#update"
     # SEO filter pages: /listing/ban/nha-mat-pho/quan-3/duong-vo-van-tan
     get "/*filters" => "page#seo", format: false
   end

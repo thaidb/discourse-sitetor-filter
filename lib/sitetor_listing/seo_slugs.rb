@@ -81,7 +81,7 @@ module SitetorListing
     end
 
     # Title/H1 matching the search keyword: "Bán Nhà mặt phố đường Võ Văn Tần Quận 3"
-    def title(category_name: nil, type: nil, position: nil, direction: nil, district: nil, ward: nil, street: nil, page: nil)
+    def title(category_name: nil, type: nil, position: nil, direction: nil, district: nil, ward: nil, street: nil, province: nil, page: nil)
       parts = []
       parts << category_name if category_name
       parts << type if type
@@ -89,6 +89,7 @@ module SitetorListing
       parts << "đường #{street}" if street
       parts << ward_display(ward) if ward
       parts << district if district
+      parts << province if province
       parts << "hướng #{direction}" if direction
       t = parts.join(" ")
       t += " - Trang #{page + 1}" if page && page > 0

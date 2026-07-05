@@ -1,7 +1,10 @@
+import { service } from "@ember/service";
 import DiscourseRoute from "discourse/routes/discourse";
 import { ajax } from "discourse/lib/ajax";
 
 export default class ListingRoute extends DiscourseRoute {
+  @service documentTitle;
+
   queryParams = {
     q: { refreshModel: true },
     price_min: { refreshModel: true },
@@ -28,6 +31,10 @@ export default class ListingRoute extends DiscourseRoute {
 
   setupController(controller, model) {
     super.setupController(controller, model);
+    // title tab = bộ lọc ghép lại: "Cho thuê Nhà mặt phố đường Nguyễn Trãi Quận 1 TP Hồ Chí Minh"
+    if (model?.seo_title) {
+      this.documentTitle.setTitle(model.seo_title);
+    }
     // nạp options cho các dropdown multi-select (1 lần khi vào trang)
     if (!controller.facets?.type) {
       controller.loadFacets();

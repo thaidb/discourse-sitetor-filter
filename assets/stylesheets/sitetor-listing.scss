@@ -250,3 +250,66 @@
     }
   }
 }
+
+.sitetor-listing .listing-goto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  input {
+    width: 70px;
+    margin: 0;
+  }
+}
+
+.edit-topic-info-modal {
+  .edit-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+  }
+
+  .edit-info-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    label {
+      font-weight: 600;
+      margin: 0;
+    }
+
+    input,
+    select {
+      width: 100%;
+      margin: 0;
+    }
+  }
+
+  .edit-info-price {
+    grid-column: 1 / -1;
+
+    .edit-info-row {
+      display: flex;
+      gap: 8px;
+
+      input {
+        flex: 1;
+      }
+
+      select {
+        width: auto;
+      }
+    }
+  }
+
+  .edit-info-hint,
+  .edit-info-note {
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+  }
+
+  .edit-info-saved {
+    font-size: var(--font-up-1);
+  }
+}

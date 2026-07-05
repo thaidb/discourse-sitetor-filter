@@ -216,6 +216,17 @@ export default <template>
         @disabled={{unless @controller.hasNext true}}
         @label="sitetor_listing.next"
       />
+      <span class="listing-goto">
+        {{i18n "sitetor_listing.go_to_page"}}
+        <Input
+          @value={{@controller.fGotoPage}}
+          @type="number"
+          min="1"
+          {{on "input" @controller.updateGotoPage}}
+        />
+        <DButton @action={{@controller.gotoPage}} @label="sitetor_listing.go" class="btn-small" />
+      </span>
+
     </div>
   </div>
 </template>

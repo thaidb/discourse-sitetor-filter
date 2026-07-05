@@ -2,6 +2,12 @@ vi:
   js:
     sitetor_listing:
       title: "Tìm bất động sản"
+      edit_info: "Cập nhật thông tin BĐS"
+      edit_info_title: "Thông tin bất động sản của topic"
+      edit_info_hint: "Nhập thông tin có cấu trúc để tin hiển thị đúng trong bộ lọc /listing và /mapping. Bỏ trống = xóa giá trị."
+      edit_info_note: "Lưu ý: sau khi lưu, hệ thống sẽ KHÔNG tự trích lại từ nội dung bài — thông tin bạn nhập là chuẩn."
+      edit_info_save: "Lưu thông tin"
+      edit_info_saved: "Đã lưu! Bộ lọc sẽ dùng thông tin mới ngay."
       seo_page: "Trang SEO của bộ lọc này"
       category: "Loại tin"
       product_type: "Loại Sản Phẩm"
@@ -38,6 +44,8 @@ vi:
       no_results: "Không có tin nào khớp bộ lọc."
       prev: "‹ Trước"
       next: "Sau ›"
+      go_to_page: "Đến trang"
+      go: "Đi"
       page: "Trang %{page}"
       recommend: "Giới thiệu BĐS của bạn"
       recommend_title: "Chọn listing để giới thiệu"

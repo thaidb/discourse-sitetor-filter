@@ -1,6 +1,6 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
-import RecommendListingModal from "discourse/plugins/discourse-sitetor-listing/discourse/components/modal/recommend-listing";
+import EditTopicInfoModal from "discourse/plugins/discourse-sitetor-listing/discourse/components/modal/edit-topic-info";
 
 
 // mở rộng danh sách category gồm cả sub/sub-sub (đồng bộ với with_descendants server)
@@ -19,10 +19,10 @@ function expandWithDescendants(ids, categories) {
   return set;
 }
 
-// Nút "Giới thiệu BĐS của bạn" dưới chân topic Cần mua / Cần thuê:
-// mở modal chọn 1 listing trong tài khoản → tạo reply gắn link vào nhu cầu.
+// Nút "Cập nhật thông tin BĐS" dưới chân topic (chủ topic / staff):
+// mở form nhập giá, diện tích, mặt tiền, loại SP, vị trí, hướng, địa chỉ.
 export default {
-  name: "sitetor-listing-recommend",
+  name: "sitetor-listing-edit-info",
 
   initialize(container) {
     const siteSettings = container.lookup("service:site-settings");
@@ -30,34 +30,42 @@ export default {
       return;
     }
 
-    const demandIds = (siteSettings.sitetor_listing_demand_categories || "")
+    const categoryIds = (
+      (siteSettings.sitetor_listing_categories || "") +
+      "|" +
+      (siteSettings.sitetor_listing_demand_categories || "")
+    )
       .split("|")
       .map((s) => parseInt(s, 10))
       .filter(Boolean);
 
     withPluginApi((api) => {
       api.registerTopicFooterButton({
-        id: "recommend-listing",
-        icon: "reply",
-        priority: 240,
+        id: "listing-edit-info",
+        icon: "pencil",
+        priority: 245,
         translatedLabel() {
-          return i18n("sitetor_listing.recommend");
+          return i18n("sitetor_listing.edit_info");
         },
         translatedTitle() {
-          return i18n("sitetor_listing.recommend");
+          return i18n("sitetor_listing.edit_info");
         },
         displayed() {
           return (
             !!this.currentUser &&
-            expandWithDescendants(demandIds, this.site?.categories).has(
+            expandWithDescendants(categoryIds, this.site?.categories).has(
               this.topic?.category_id
-            )
+            ) &&
+            !!this.topic?.details?.can_edit
           );
         },
         action() {
-          container
-            .lookup("service:modal")
-            .show(RecommendListingModal, { model: { topic: this.topic } });
+          container.lookup("service:modal").show(EditTopicInfoModal, {
+            model: {
+              topic: this.topic,
+              usdRate: siteSettings.sitetor_listing_usd_rate,
+            },
+          });
         },
       });
     });
