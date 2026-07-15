@@ -82,6 +82,7 @@ module SitetorListing
         created_at: t.created_at,
         bumped_at: t.bumped_at,
         tags: t.tags.pluck(:name),
+        image: t.image_url,
         price: cf[SitetorListing::FIELD_PRICE]&.to_i,
         frontage: cf[SitetorListing::FIELD_FRONTAGE]&.to_f,
         area: cf[SitetorListing::FIELD_AREA]&.to_f,
