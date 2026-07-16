@@ -4,6 +4,7 @@ import { Input, Textarea } from "@ember/component";
 import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
+import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
@@ -15,6 +16,12 @@ import MultiSelect from "discourse/plugins/discourse-sitetor-listing/discourse/c
 // giữ đồng bộ với SitetorListing::DEMAND_* (plugin.rb) — các giá trị chọn
 // TRÙNG TÊN TAG trên site để server đồng bộ tag SEO song song
 const DEMAND_TYPES = ["Cần mua", "Cần thuê"];
+// gốc cây category nhu cầu (sitetor_listing_demand_categories) → auto-default
+// "Loại giao dịch" theo vị trí topic trong cây
+const DEMAND_CATEGORY_TYPES = [
+  { id: 3344, slug: "can-thue-nha-dat", demandType: "Cần thuê" },
+  { id: 3698, slug: "can-mua-bat-dong-san", demandType: "Cần mua" },
+];
 // giữ đồng bộ với SitetorListing::SeoSlugs::TYPES (dùng chung field listing_type)
 const TYPES = [
   "Nhà mặt phố", "Nhà hẻm", "Văn phòng", "Kho, nhà xưởng",
@@ -43,15 +50,18 @@ const VIEWS = [
 // Form chủ topic nhập thông tin NHU CẦU (Cần mua/Cần thuê) có cấu trúc.
 // Custom field là nguồn chuẩn; server đồng bộ thêm tag SEO song song.
 export default class DemandInfoModal extends Component {
+  @service siteSettings;
+  @service site;
+
   @tracked loading = true;
   @tracked saving = false;
   @tracked saved = false;
 
   @tracked fDemandType = "";
   @tracked fType = "";
-  @tracked fProvince = "";
-  @tracked fDistrict = "";
-  @tracked fStreet = "";
+  @tracked fProvince = [];
+  @tracked fDistrict = [];
+  @tracked fStreet = [];
   @tracked fBudgetFrom = "";
   @tracked fBudgetTo = "";
   @tracked fBudgetUnit = "million";
@@ -71,6 +81,10 @@ export default class DemandInfoModal extends Component {
   @tracked fNote = "";
   @tracked fCustomerName = "";
   @tracked fCustomerPhone = "";
+  @tracked fContactEmail = "";
+
+  // facets địa chỉ từ /listing/facets.json (đường cascade theo quận đã chọn)
+  @tracked facets = {};
 
   demandTypes = DEMAND_TYPES;
   types = TYPES;
@@ -97,11 +111,12 @@ export default class DemandInfoModal extends Component {
       const rate = this.budgetRate;
       this.fBudgetFrom = info.budget_from ? String(info.budget_from / rate) : "";
       this.fBudgetTo = info.budget_to ? String(info.budget_to / rate) : "";
-      this.fDemandType = info.demand_type || "";
+      // chưa lưu demand_type → auto-default theo cây category (Cần thuê/Cần mua)
+      this.fDemandType = info.demand_type || this.demandTypeFromCategory();
       this.fType = info.listing_type || "";
-      this.fProvince = info.province || "";
-      this.fDistrict = info.district || "";
-      this.fStreet = info.street || "";
+      this.fProvince = info.province || [];
+      this.fDistrict = info.district || [];
+      this.fStreet = info.street || [];
       this.fAreaFrom = info.area_from ? String(info.area_from) : "";
       this.fAreaTo = info.area_to ? String(info.area_to) : "";
       this.fFrontageFrom = info.frontage_from ? String(info.frontage_from) : "";
@@ -118,6 +133,8 @@ export default class DemandInfoModal extends Component {
       this.fNote = info.note || "";
       this.fCustomerName = info.customer_name || "";
       this.fCustomerPhone = info.customer_phone || "";
+      this.fContactEmail = info.contact_email || "";
+      await this.loadFacets();
     } catch (e) {
       popupAjaxError(e);
     } finally {
@@ -125,7 +142,54 @@ export default class DemandInfoModal extends Component {
     }
   }
 
+  // options tỉnh/quận/đường từ facets — đường cascade theo quận đã chọn
+  // (mirror controllers/listing.js loadFacets)
+  async loadFacets() {
+    const data = {};
+    if (this.fDistrict.length) {
+      data.district = this.fDistrict.join(",");
+    }
+    try {
+      this.facets = await ajax("/listing/facets.json", { data });
+    } catch {
+      this.facets = {};
+    }
+  }
+
+  get provinceOptions() {
+    return this.facets.province || [];
+  }
+
+  get districtOptions() {
+    return this.facets.district || [];
+  }
+
+  get streetOptions() {
+    return this.facets.street || [];
+  }
+
+  // topic thuộc cây "Cần thuê"/"Cần mua" → loại giao dịch mặc định tương ứng
+  demandTypeFromCategory() {
+    const categories = this.site.categories || [];
+    let cat = categories.find(
+      (c) => c.id === this.args.model.topic?.category_id
+    );
+    for (let depth = 0; cat && depth < 6; depth++) {
+      const match = DEMAND_CATEGORY_TYPES.find(
+        (d) => d.id === cat.id || d.slug === cat.slug
+      );
+      if (match) {
+        return match.demandType;
+      }
+      cat = categories.find((c) => c.id === cat.parent_category_id);
+    }
+    return "";
+  }
+
   get budgetRate() {
+    if (this.fBudgetUnit === "usd") {
+      return this.siteSettings.sitetor_listing_usd_rate || 26000;
+    }
     return this.fBudgetUnit === "billion" ? 1e9 : 1e6;
   }
 
@@ -144,6 +208,11 @@ export default class DemandInfoModal extends Component {
   @action
   updateMulti(name, values) {
     this[name] = values;
+    if (name === "fDistrict") {
+      // cascade: đổi quận → nạp lại danh sách đường, bỏ đường không còn hợp lệ
+      this.fStreet = [];
+      this.loadFacets();
+    }
   }
 
   @action
@@ -155,9 +224,9 @@ export default class DemandInfoModal extends Component {
         data: {
           demand_type: this.fDemandType,
           listing_type: this.fType,
-          province: this.fProvince,
-          district: this.fDistrict,
-          street: this.fStreet,
+          province: JSON.stringify(this.fProvince),
+          district: JSON.stringify(this.fDistrict),
+          street: JSON.stringify(this.fStreet),
           budget_from: this.toVnd(this.fBudgetFrom),
           budget_to: this.toVnd(this.fBudgetTo),
           area_from: this.fAreaFrom,
@@ -176,6 +245,7 @@ export default class DemandInfoModal extends Component {
           note: this.fNote,
           customer_name: this.fCustomerName,
           customer_phone: this.fCustomerPhone,
+          contact_email: this.fContactEmail,
         },
       });
       this.saved = true;
@@ -223,17 +293,34 @@ export default class DemandInfoModal extends Component {
 
             <div class="edit-info-field">
               <label>{{i18n "sitetor_listing.province"}}</label>
-              <Input @value={{this.fProvince}} />
+              <MultiSelect
+                @label={{i18n "sitetor_listing.province"}}
+                @options={{this.provinceOptions}}
+                @selected={{this.fProvince}}
+                @onChange={{fn this.updateMulti "fProvince"}}
+              />
             </div>
 
             <div class="edit-info-field">
               <label>{{i18n "sitetor_listing.district"}}</label>
-              <Input @value={{this.fDistrict}} />
+              <MultiSelect
+                @label={{i18n "sitetor_listing.district"}}
+                @options={{this.districtOptions}}
+                @selected={{this.fDistrict}}
+                @onChange={{fn this.updateMulti "fDistrict"}}
+                @searchable={{true}}
+              />
             </div>
 
             <div class="edit-info-field edit-info-full">
               <label>{{i18n "sitetor_listing.street"}}</label>
-              <Input @value={{this.fStreet}} />
+              <MultiSelect
+                @label={{i18n "sitetor_listing.street"}}
+                @options={{this.streetOptions}}
+                @selected={{this.fStreet}}
+                @onChange={{fn this.updateMulti "fStreet"}}
+                @searchable={{true}}
+              />
             </div>
 
             <div class="edit-info-field edit-info-full">
@@ -244,6 +331,7 @@ export default class DemandInfoModal extends Component {
                 <select {{on "change" (fn this.updateField "fBudgetUnit")}}>
                   <option value="million" selected={{eq this.fBudgetUnit "million"}}>{{i18n "sitetor_listing.million"}}</option>
                   <option value="billion" selected={{eq this.fBudgetUnit "billion"}}>{{i18n "sitetor_listing.billion"}}</option>
+                  <option value="usd" selected={{eq this.fBudgetUnit "usd"}}>USD</option>
                 </select>
               </div>
             </div>
@@ -346,6 +434,11 @@ export default class DemandInfoModal extends Component {
             <div class="edit-info-field">
               <label>{{i18n "sitetor_listing.customer_phone"}}</label>
               <Input @value={{this.fCustomerPhone}} />
+            </div>
+
+            <div class="edit-info-field">
+              <label>{{i18n "sitetor_listing.contact_email"}}</label>
+              <Input @value={{this.fContactEmail}} @type="email" />
             </div>
           </div>
 

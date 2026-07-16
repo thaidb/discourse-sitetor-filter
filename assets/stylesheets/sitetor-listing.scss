@@ -339,8 +339,28 @@
     margin: 0;
   }
 
-  .edit-info-field .listing-ms > summary {
-    display: block;
-    white-space: normal;
+  // multi-select trong modal: control chiếm hết bề ngang field, panel
+  // sổ xuống không tràn ra ngoài modal (min-width 230px của trang /listing
+  // gây tràn trong cột grid hẹp)
+  .edit-info-field .listing-ms {
+    width: 100%;
+    max-width: 100%;
+
+    > summary {
+      display: block;
+      white-space: normal;
+      box-sizing: border-box;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .listing-ms-panel {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      right: 0;
+    }
   }
 }

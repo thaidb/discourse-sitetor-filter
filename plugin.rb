@@ -48,6 +48,7 @@ module ::SitetorListing
   FIELD_DEMAND_NOTE = "demand_note"
   FIELD_CUSTOMER_NAME = "customer_name"
   FIELD_CUSTOMER_PHONE = "customer_phone"
+  FIELD_CONTACT_EMAIL = "contact_email"
 
   DEMAND_INTEGER_FIELDS = [FIELD_BUDGET_FROM, FIELD_BUDGET_TO, FIELD_NUMBER_FLOOR].freeze
   DEMAND_FLOAT_FIELDS = [
@@ -67,6 +68,7 @@ module ::SitetorListing
     FIELD_DEMAND_NOTE,
     FIELD_CUSTOMER_NAME,
     FIELD_CUSTOMER_PHONE,
+    FIELD_CONTACT_EMAIL,
   ].freeze
 
   # Form "Cập nhật thông tin nhu cầu" (/listing/demand-info): param API → custom field
@@ -95,7 +97,13 @@ module ::SitetorListing
     "note" => FIELD_DEMAND_NOTE,
     "customer_name" => FIELD_CUSTOMER_NAME,
     "customer_phone" => FIELD_CUSTOMER_PHONE,
+    "contact_email" => FIELD_CONTACT_EMAIL,
   }.freeze
+
+  # Field địa chỉ trên topic NHU CẦU lưu dạng JSON array (một nhu cầu có thể
+  # nhắm nhiều khu vực) — topic listing vẫn lưu chuỗi đơn, không ảnh hưởng
+  # facets/filter vì facets chỉ quét category listing.
+  DEMAND_ADDRESS_MULTI = %w[province district ward street].freeze
 
   # Danh sách chọn cố định của form nhu cầu — giá trị TRÙNG TÊN TAG trên site
   # (nhóm H Nhu cầu sử dụng / E Hướng / D Vị trí) để đồng bộ tag SEO song song

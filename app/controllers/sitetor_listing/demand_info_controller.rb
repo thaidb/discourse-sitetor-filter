@@ -13,6 +13,8 @@ module SitetorListing
     INTEGER_PARAMS = %w[budget_from budget_to number_floor].freeze
     FLOAT_PARAMS = %w[area_from area_to frontage_from frontage_to floor_area_from floor_area_to].freeze
     MULTI_PARAMS = %w[purpose industry view].freeze
+    # địa chỉ trên topic nhu cầu là multi (JSON array) — 1 nhu cầu nhắm nhiều khu vực
+    ADDRESS_MULTI_PARAMS = SitetorListing::DEMAND_ADDRESS_MULTI
     SELECT_PARAMS = {
       "demand_type" => SitetorListing::DEMAND_TYPES,
       "listing_type" => SitetorListing::SeoSlugs::TYPES,
@@ -76,7 +78,7 @@ module SitetorListing
       elsif FLOAT_PARAMS.include?(param)
         value = raw.presence&.to_f
         value && value > 0 ? value : nil
-      elsif MULTI_PARAMS.include?(param)
+      elsif MULTI_PARAMS.include?(param) || ADDRESS_MULTI_PARAMS.include?(param)
         list =
           parse_multi(raw)
             .map { |v| v.to_s.strip.slice(0, TEXT_MAX) }
@@ -104,6 +106,16 @@ module SitetorListing
 
     def multi_values(topic, field)
       parse_multi(topic.custom_fields[field])
+    end
+
+    # địa chỉ: giá trị mới là JSON array; giá trị cũ (parser ghi chuỗi đơn)
+    # bọc thành mảng 1 phần tử để client prefill được
+    def address_values(raw)
+      return [] if raw.blank?
+      parsed = JSON.parse(raw.to_s)
+      parsed.is_a?(Array) ? parsed : [raw.to_s]
+    rescue JSON::ParserError
+      [raw.to_s]
     end
 
     # Đồng bộ tag SEO song song — custom field là nguồn chuẩn, tag chỉ là
@@ -143,6 +155,8 @@ module SitetorListing
         out[param] =
           if MULTI_PARAMS.include?(param)
             parse_multi(cf[field])
+          elsif ADDRESS_MULTI_PARAMS.include?(param)
+            address_values(cf[field])
           elsif INTEGER_PARAMS.include?(param)
             cf[field]&.to_i
           elsif FLOAT_PARAMS.include?(param)
