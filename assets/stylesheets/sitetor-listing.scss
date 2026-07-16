@@ -313,3 +313,34 @@
     font-size: var(--font-up-1);
   }
 }
+
+// form "Cập nhật thông tin nhu cầu" — kế thừa layout edit-topic-info-modal
+.demand-info-modal {
+  .edit-info-full {
+    grid-column: 1 / -1;
+  }
+
+  .edit-info-field .edit-info-row {
+    display: flex;
+    gap: 8px;
+
+    input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    select {
+      width: auto;
+    }
+  }
+
+  .edit-info-field textarea {
+    width: 100%;
+    margin: 0;
+  }
+
+  .edit-info-field .listing-ms > summary {
+    display: block;
+    white-space: normal;
+  }
+}

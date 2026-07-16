@@ -29,6 +29,81 @@ module ::SitetorListing
   # cờ "chủ topic đã nhập tay" — parser/backfill không được ghi đè
   FIELD_MANUAL = "listing_manual"
 
+  # Field NHU CẦU (topic Cần mua/Cần thuê trong sitetor_listing_demand_categories).
+  # Loại BĐS/hướng/vị trí/địa chỉ DÙNG CHUNG field listing_* (đối xứng để ghép tin /mapping).
+  FIELD_DEMAND_TYPE = "demand_type"
+  FIELD_BUDGET_FROM = "budget_from"
+  FIELD_BUDGET_TO = "budget_to"
+  FIELD_AREA_FROM = "area_from"
+  FIELD_AREA_TO = "area_to"
+  FIELD_FRONTAGE_FROM = "frontage_from"
+  FIELD_FRONTAGE_TO = "frontage_to"
+  FIELD_FLOOR_AREA_FROM = "floor_area_from"
+  FIELD_FLOOR_AREA_TO = "floor_area_to"
+  FIELD_NUMBER_FLOOR = "number_floor"
+  FIELD_DEMAND_PURPOSE = "demand_purpose"   # JSON array string
+  FIELD_DEMAND_INDUSTRY = "demand_industry" # JSON array string
+  FIELD_DEMAND_VIEW = "demand_view"         # JSON array string
+  FIELD_DEMAND_TITLE = "demand_title"
+  FIELD_DEMAND_NOTE = "demand_note"
+  FIELD_CUSTOMER_NAME = "customer_name"
+  FIELD_CUSTOMER_PHONE = "customer_phone"
+
+  DEMAND_INTEGER_FIELDS = [FIELD_BUDGET_FROM, FIELD_BUDGET_TO, FIELD_NUMBER_FLOOR].freeze
+  DEMAND_FLOAT_FIELDS = [
+    FIELD_AREA_FROM,
+    FIELD_AREA_TO,
+    FIELD_FRONTAGE_FROM,
+    FIELD_FRONTAGE_TO,
+    FIELD_FLOOR_AREA_FROM,
+    FIELD_FLOOR_AREA_TO,
+  ].freeze
+  DEMAND_STRING_FIELDS = [
+    FIELD_DEMAND_TYPE,
+    FIELD_DEMAND_PURPOSE,
+    FIELD_DEMAND_INDUSTRY,
+    FIELD_DEMAND_VIEW,
+    FIELD_DEMAND_TITLE,
+    FIELD_DEMAND_NOTE,
+    FIELD_CUSTOMER_NAME,
+    FIELD_CUSTOMER_PHONE,
+  ].freeze
+
+  # Form "Cập nhật thông tin nhu cầu" (/listing/demand-info): param API → custom field
+  DEMAND_UPDATABLE = {
+    "demand_type" => FIELD_DEMAND_TYPE,
+    "listing_type" => FIELD_TYPE,
+    "province" => FIELD_PROVINCE,
+    "district" => FIELD_DISTRICT,
+    "ward" => FIELD_WARD,
+    "street" => FIELD_STREET,
+    "budget_from" => FIELD_BUDGET_FROM,
+    "budget_to" => FIELD_BUDGET_TO,
+    "area_from" => FIELD_AREA_FROM,
+    "area_to" => FIELD_AREA_TO,
+    "frontage_from" => FIELD_FRONTAGE_FROM,
+    "frontage_to" => FIELD_FRONTAGE_TO,
+    "floor_area_from" => FIELD_FLOOR_AREA_FROM,
+    "floor_area_to" => FIELD_FLOOR_AREA_TO,
+    "number_floor" => FIELD_NUMBER_FLOOR,
+    "purpose" => FIELD_DEMAND_PURPOSE,
+    "industry" => FIELD_DEMAND_INDUSTRY,
+    "view" => FIELD_DEMAND_VIEW,
+    "direction" => FIELD_DIRECTION,
+    "position" => FIELD_POSITION,
+    "title" => FIELD_DEMAND_TITLE,
+    "note" => FIELD_DEMAND_NOTE,
+    "customer_name" => FIELD_CUSTOMER_NAME,
+    "customer_phone" => FIELD_CUSTOMER_PHONE,
+  }.freeze
+
+  # Danh sách chọn cố định của form nhu cầu — giá trị TRÙNG TÊN TAG trên site
+  # (nhóm H Nhu cầu sử dụng / E Hướng / D Vị trí) để đồng bộ tag SEO song song
+  DEMAND_TYPES = ["Cần mua", "Cần thuê"].freeze
+  DEMAND_PURPOSES = %w[Để-ở Kinh-doanh Đầu-tư].freeze
+  DEMAND_DIRECTIONS = %w[Đông Tây Nam Bắc Đông-Bắc Đông-Nam Tây-Bắc Tây-Nam].freeze
+  DEMAND_POSITIONS = %w[Hẻm Khu-compound Mặt-tiền Ngõ Nội-bộ].freeze
+
   STRING_FIELDS = [
     FIELD_TYPE,
     FIELD_POSITION,
@@ -81,6 +156,11 @@ after_initialize do
   register_topic_custom_field_type(SitetorListing::FIELD_FRONTAGE, :float)
   register_topic_custom_field_type(SitetorListing::FIELD_AREA, :float)
   SitetorListing::STRING_FIELDS.each { |f| register_topic_custom_field_type(f, :string) }
+
+  # Custom fields nhu cầu (form "Cập nhật thông tin nhu cầu")
+  SitetorListing::DEMAND_INTEGER_FIELDS.each { |f| register_topic_custom_field_type(f, :integer) }
+  SitetorListing::DEMAND_FLOAT_FIELDS.each { |f| register_topic_custom_field_type(f, :float) }
+  SitetorListing::DEMAND_STRING_FIELDS.each { |f| register_topic_custom_field_type(f, :string) }
 
   # Filter topic list gốc theo query param (thanh filter sau breadcrumb)
   SitetorListing::DiscoveryFilters.register!
@@ -192,6 +272,7 @@ after_initialize do
   require_relative "app/controllers/sitetor_listing/filter_controller"
 
   require_relative "app/controllers/sitetor_listing/topic_info_controller"
+  require_relative "app/controllers/sitetor_listing/demand_info_controller"
 
   SitetorListing::Engine.routes.draw do
     get "/" => "page#index"
@@ -199,6 +280,8 @@ after_initialize do
     get "/facets" => "filter#facets"
     get "/topic-info" => "topic_info#show"
     put "/topic-info" => "topic_info#update"
+    get "/demand-info/:topic_id" => "demand_info#show"
+    post "/demand-info/:topic_id" => "demand_info#update"
     # SEO filter pages: /listing/ban/nha-mat-pho/quan-3/duong-vo-van-tan
     get "/*filters" => "page#seo", format: false
   end

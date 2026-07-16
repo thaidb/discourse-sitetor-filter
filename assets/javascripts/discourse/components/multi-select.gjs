@@ -86,7 +86,9 @@ export default class MultiSelect extends Component {
                   {{on "change" (fn this.toggle o.value)}}
                 />
                 <span class="listing-ms-value">{{o.value}}</span>
-                <span class="listing-ms-c">({{o.count}})</span>
+                {{#if o.count}}
+                  <span class="listing-ms-c">({{o.count}})</span>
+                {{/if}}
               </label>
             </li>
           {{else}}

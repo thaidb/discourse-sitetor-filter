@@ -1,7 +1,7 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
+import DemandInfoModal from "discourse/plugins/discourse-sitetor-listing/discourse/components/modal/demand-info";
 import EditTopicInfoModal from "discourse/plugins/discourse-sitetor-listing/discourse/components/modal/edit-topic-info";
-
 
 // mở rộng danh sách category gồm cả sub/sub-sub (đồng bộ với with_descendants server)
 function expandWithDescendants(ids, categories) {
@@ -19,8 +19,16 @@ function expandWithDescendants(ids, categories) {
   return set;
 }
 
-// Nút "Cập nhật thông tin BĐS" dưới chân topic (chủ topic / staff):
-// mở form nhập giá, diện tích, mặt tiền, loại SP, vị trí, hướng, địa chỉ.
+function parseIds(setting) {
+  return (setting || "")
+    .split("|")
+    .map((s) => parseInt(s, 10))
+    .filter(Boolean);
+}
+
+// Nút edit dưới chân topic (chủ topic / staff), rẽ nhánh theo category:
+// - category listing (Bán/Cho thuê)  → "Cập nhật thông tin BĐS"      → EditTopicInfoModal
+// - category demand (Cần mua/Cần thuê) → "Cập nhật thông tin nhu cầu" → DemandInfoModal
 export default {
   name: "sitetor-listing-edit-info",
 
@@ -30,14 +38,19 @@ export default {
       return;
     }
 
-    const categoryIds = (
-      (siteSettings.sitetor_listing_categories || "") +
-      "|" +
-      (siteSettings.sitetor_listing_demand_categories || "")
-    )
-      .split("|")
-      .map((s) => parseInt(s, 10))
-      .filter(Boolean);
+    const listingIds = parseIds(siteSettings.sitetor_listing_categories);
+    const demandIds = parseIds(siteSettings.sitetor_listing_demand_categories);
+
+    // category nằm trong cả 2 setting → ưu tiên flow listing (giữ hành vi cũ)
+    const inListing = (ctx) =>
+      expandWithDescendants(listingIds, ctx.site?.categories).has(
+        ctx.topic?.category_id
+      );
+    const inDemand = (ctx) =>
+      !inListing(ctx) &&
+      expandWithDescendants(demandIds, ctx.site?.categories).has(
+        ctx.topic?.category_id
+      );
 
     withPluginApi((api) => {
       api.registerTopicFooterButton({
@@ -45,27 +58,40 @@ export default {
         icon: "pencil",
         priority: 245,
         translatedLabel() {
-          return i18n("sitetor_listing.edit_info");
+          return i18n(
+            inDemand(this)
+              ? "sitetor_listing.edit_demand_info"
+              : "sitetor_listing.edit_info"
+          );
         },
         translatedTitle() {
-          return i18n("sitetor_listing.edit_info");
+          return i18n(
+            inDemand(this)
+              ? "sitetor_listing.edit_demand_info"
+              : "sitetor_listing.edit_info"
+          );
         },
         displayed() {
           return (
             !!this.currentUser &&
-            expandWithDescendants(categoryIds, this.site?.categories).has(
-              this.topic?.category_id
-            ) &&
+            (inListing(this) || inDemand(this)) &&
             !!this.topic?.details?.can_edit
           );
         },
         action() {
-          container.lookup("service:modal").show(EditTopicInfoModal, {
-            model: {
-              topic: this.topic,
-              usdRate: siteSettings.sitetor_listing_usd_rate,
-            },
-          });
+          const modal = container.lookup("service:modal");
+          if (inDemand(this)) {
+            modal.show(DemandInfoModal, {
+              model: { topic: this.topic },
+            });
+          } else {
+            modal.show(EditTopicInfoModal, {
+              model: {
+                topic: this.topic,
+                usdRate: siteSettings.sitetor_listing_usd_rate,
+              },
+            });
+          }
         },
       });
     });
