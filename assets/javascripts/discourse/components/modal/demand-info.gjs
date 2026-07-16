@@ -146,6 +146,10 @@ export default class DemandInfoModal extends Component {
   // (mirror controllers/listing.js loadFacets)
   async loadFacets() {
     const data = {};
+    // District list depends on selected Province(s); Street on District(s).
+    if (this.fProvince.length) {
+      data.province = this.fProvince.join(",");
+    }
     if (this.fDistrict.length) {
       data.district = this.fDistrict.join(",");
     }
@@ -208,8 +212,14 @@ export default class DemandInfoModal extends Component {
   @action
   updateMulti(name, values) {
     this[name] = values;
-    if (name === "fDistrict") {
-      // cascade: đổi quận → nạp lại danh sách đường, bỏ đường không còn hợp lệ
+    if (name === "fProvince") {
+      // cascade: đổi tỉnh → nạp lại quận (gộp quận của các tỉnh đã chọn),
+      // bỏ quận/đường không còn thuộc tỉnh đã chọn
+      this.fDistrict = [];
+      this.fStreet = [];
+      this.loadFacets();
+    } else if (name === "fDistrict") {
+      // cascade: đổi quận → nạp lại danh sách đường
       this.fStreet = [];
       this.loadFacets();
     }

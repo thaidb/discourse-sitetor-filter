@@ -36,10 +36,20 @@ module SitetorListing
     def facets
       base = Topic.visible.listable_topics.where(category_id: allowed_ids(nil))
 
+      # Cascade: District list depends on the selected Province(s); Ward/Street
+      # on the selected District(s). Multiple provinces → union (by_field uses IN).
+      province_filter = csv_param(:province)
+      district_base =
+        if province_filter.any?
+          SitetorListing::TopicFilter.by_field(base, SitetorListing::FIELD_PROVINCE, province_filter)
+        else
+          base
+        end
+
       district_filter = csv_param(:district)
       cascade = {}
       if district_filter.any?
-        cascade_scope = SitetorListing::TopicFilter.by_field(base, SitetorListing::FIELD_DISTRICT, district_filter)
+        cascade_scope = SitetorListing::TopicFilter.by_field(district_base, SitetorListing::FIELD_DISTRICT, district_filter)
         cascade = {
           ward: facet_counts(cascade_scope, SitetorListing::FIELD_WARD),
           street: facet_counts(cascade_scope, SitetorListing::FIELD_STREET),
@@ -51,7 +61,7 @@ module SitetorListing
         position: facet_counts(base, SitetorListing::FIELD_POSITION),
         direction: facet_counts(base, SitetorListing::FIELD_DIRECTION),
         province: facet_counts(base, SitetorListing::FIELD_PROVINCE),
-        district: facet_counts(base, SitetorListing::FIELD_DISTRICT),
+        district: facet_counts(district_base, SitetorListing::FIELD_DISTRICT),
         ward: cascade[:ward] || [],
         street: cascade[:street] || [],
       }
