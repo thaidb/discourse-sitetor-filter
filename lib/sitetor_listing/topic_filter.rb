@@ -30,10 +30,26 @@ module SitetorListing
         scope = by_field(scope, field, values) if field && values.present?
       end
 
+      scope = by_tags(scope, f[:tags]) if f[:tags].present?
+
       total = scope.count
       page = f[:page].to_i
       topics = sort(scope, f[:sort]).offset(page * per).limit(per)
       { total: total, topics: topics }
+    end
+
+    # Match-all tag intersection: topic must carry EVERY tag in `names`.
+    def by_tags(scope, names)
+      tag_ids = Tag.where(name: names).pluck(:id)
+      return scope.none if tag_ids.size < names.uniq.size
+
+      tag_ids.each_with_index do |tid, i|
+        scope = scope.joins(<<~SQL)
+          INNER JOIN topic_tags tt_#{i}
+            ON tt_#{i}.topic_id = topics.id AND tt_#{i}.tag_id = #{tid.to_i}
+        SQL
+      end
+      scope
     end
 
     def by_field(scope, field, values)

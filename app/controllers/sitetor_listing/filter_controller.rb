@@ -92,6 +92,7 @@ module SitetorListing
         frontage_min: params[:frontage_min], frontage_max: params[:frontage_max],
         area_min: params[:area_min], area_max: params[:area_max],
         multi: SitetorListing::MULTI_FILTERS.keys.to_h { |k| [k, csv_param(k)] },
+        tags: csv_param(:tags),
         sort: params[:sort],
         page: params[:page].to_i,
         category_id: params[:category_id],
