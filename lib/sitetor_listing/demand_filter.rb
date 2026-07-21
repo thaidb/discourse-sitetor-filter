@@ -72,16 +72,23 @@ module SitetorListing
 
     # Chỉ lấy tag "thật" — bỏ tag synonym (target_tag_id != null) để tag đã gộp
     # (vd Cafe→Cà-phê) không hiện trùng trên panel & không sinh route riêng.
+    # KHÔNG cache kết quả RỖNG: nếu memoize `@x ||= []` lúc boot (unicorn
+    # preload_app fork sang worker khi tag group chưa sẵn), ivar kẹt [] vĩnh viễn
+    # ⇒ sidebar/serializer mất sạch. Chỉ cache khi đã có tag (tự lành lần gọi sau).
     def industry_tags
-      @industry_tags ||= (industry_tag_group&.tags&.where(target_tag_id: nil)&.to_a || [])
+      cached = @industry_tags
+      return cached if cached && !cached.empty?
+      @industry_tags = (industry_tag_group&.tags&.where(target_tag_id: nil)&.to_a || [])
     end
 
+    # Dẫn xuất — KHÔNG memoize (rẻ, và tránh kẹt rỗng); luôn tính từ industry_tags
+    # (đã tự lành ở trên).
     def industry_tag_ids
-      @industry_tag_ids ||= industry_tags.map(&:id)
+      industry_tags.map(&:id)
     end
 
     def industry_tag_names
-      @industry_tag_names ||= industry_tags.map(&:name)
+      industry_tags.map(&:name)
     end
 
     # Bỏ dấu tiếng Việt (NFD → xoá dấu kết hợp; đ→d). KHÔNG dùng transliterate của
@@ -97,7 +104,9 @@ module SitetorListing
 
     # slug (từ URL) → tên tag ngành nghề tương ứng, hoặc nil nếu không khớp.
     def industry_slug_map
-      @industry_slug_map ||= industry_tag_names.to_h { |n| [slug_for(n), n] }
+      cached = @industry_slug_map
+      return cached if cached && !cached.empty?
+      @industry_slug_map = industry_tag_names.to_h { |n| [slug_for(n), n] }
     end
 
     def industry_name_for_slug(slug)
