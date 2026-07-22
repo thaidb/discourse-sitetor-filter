@@ -26,8 +26,12 @@ module SitetorListing
       scope = range(scope, SitetorListing::FIELD_AREA, f[:area_min], f[:area_max])
 
       (f[:multi] || {}).each do |param, values|
-        field = SitetorListing::MULTI_FILTERS[param]
-        scope = by_field(scope, field, values) if field && values.present?
+        next if values.blank?
+        if SitetorListing::ENUM_TAG_PARAMS.include?(param)
+          scope = by_enum(scope, param, values)
+        elsif (field = SitetorListing::MULTI_FILTERS[param])
+          scope = by_field(scope, field, values)
+        end
       end
 
       scope = by_tags(scope, f[:tags]) if f[:tags].present?
@@ -50,6 +54,55 @@ module SitetorListing
         SQL
       end
       scope
+    end
+
+    # Lọc 1 chiều enum (type/position/direction) bằng TAG. OR trong-chiều (topic
+    # mang BẤT KỲ tag nào đã chọn), AND giữa-các-chiều (mỗi lần gọi thêm một
+    # WHERE riêng → giao). Value đến có thể là tên tag chuẩn (thanh filter
+    # /c/listing) hoặc chữ hiển thị field (SEO/trang /listing cũ) — đều quy về
+    # tag qua enum_value_to_tag. Value không map được tag ("Nhà hẻm"/"Tầng
+    # thương mại") rơi về field (OR chung trong chiều).
+    def by_enum(scope, param, values)
+      vocab = SitetorListing::DemandFilter.enum_tag_names(SitetorListing::ENUM_GROUP_PARAM[param])
+      tag_names = []
+      field_values = []
+      values.each do |v|
+        tag = enum_value_to_tag(param, v, vocab)
+        tag ? (tag_names << tag) : (field_values << v)
+      end
+
+      conds = []
+      binds = []
+      if tag_names.any?
+        tag_ids = Tag.where(name: tag_names).pluck(:id)
+        if tag_ids.any?
+          conds << "EXISTS (SELECT 1 FROM topic_tags te WHERE te.topic_id = topics.id AND te.tag_id IN (?))"
+          binds << tag_ids
+        end
+      end
+      if field_values.any? && (field = SitetorListing::MULTI_FILTERS[param])
+        conds << "EXISTS (SELECT 1 FROM topic_custom_fields fe WHERE fe.topic_id = topics.id AND fe.name = ? AND fe.value IN (?))"
+        binds << field << field_values
+      end
+
+      return scope.none if conds.empty?
+      scope.where(conds.join(" OR "), *binds)
+    end
+
+    # Chữ hiển thị / tên tag → tên tag chuẩn trong group; nil nếu không có tag
+    # tương ứng (→ caller dùng field-fallback).
+    def enum_value_to_tag(param, value, vocab)
+      v = value.to_s.strip
+      return nil if v.empty?
+      return v if vocab.include?(v) # đã là tên tag chuẩn
+
+      case param
+      when "type" then SitetorListing::TYPE_TAG[v]
+      when "position" then SitetorListing::POSITION_TAG[v]
+      when "direction"
+        d = v.tr(" ", "-")
+        vocab.include?(d) ? d : nil
+      end
     end
 
     def by_field(scope, field, values)

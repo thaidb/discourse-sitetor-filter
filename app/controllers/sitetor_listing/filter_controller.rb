@@ -56,15 +56,29 @@ module SitetorListing
         }
       end
 
-      render json: {
-        type: facet_counts(base, SitetorListing::FIELD_TYPE),
-        position: facet_counts(base, SitetorListing::FIELD_POSITION),
-        direction: facet_counts(base, SitetorListing::FIELD_DIRECTION),
+      # vocab=tags (thanh filter /c/listing) → enum đếm bằng TAG (vocab chuẩn,
+      # gộp biến thể chữ). Mặc định (trang /listing cũ + SEO) giữ đếm theo field.
+      enum =
+        if params[:vocab].to_s == "tags"
+          {
+            type: tag_facet_counts(base, "property_types"),
+            position: tag_facet_counts(base, "positions"),
+            direction: tag_facet_counts(base, "directions"),
+          }
+        else
+          {
+            type: facet_counts(base, SitetorListing::FIELD_TYPE),
+            position: facet_counts(base, SitetorListing::FIELD_POSITION),
+            direction: facet_counts(base, SitetorListing::FIELD_DIRECTION),
+          }
+        end
+
+      render json: enum.merge(
         province: facet_counts(base, SitetorListing::FIELD_PROVINCE),
         district: facet_counts(district_base, SitetorListing::FIELD_DISTRICT),
         ward: cascade[:ward] || [],
         street: cascade[:street] || [],
-      }
+      )
     end
 
     private
@@ -174,6 +188,20 @@ module SitetorListing
         .limit(500)
         .count
         .map { |value, count| { value: value, count: count } }
+    end
+
+    # Đếm topic theo TAG trong group enum (vocab chuẩn). Dùng chung vocab với
+    # cầu (DemandFilter.enum_tag_names/_ids — cùng thứ tự :id nên zip khớp).
+    # Bỏ tag 0 topic, sắp theo count giảm dần.
+    def tag_facet_counts(scope, group_param)
+      ids = SitetorListing::DemandFilter.enum_tag_ids(group_param)
+      return [] if ids.blank?
+      id_to_name = ids.zip(SitetorListing::DemandFilter.enum_tag_names(group_param)).to_h
+      counts = TopicTag.where(tag_id: ids, topic_id: scope.select(:id)).group(:tag_id).count
+      ids
+        .map { |tid| { value: id_to_name[tid], count: counts[tid] || 0 } }
+        .reject { |o| o[:count].zero? }
+        .sort_by { |o| -o[:count] }
     end
   end
 end

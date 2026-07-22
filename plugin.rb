@@ -163,6 +163,29 @@ module ::SitetorListing
     "district" => FIELD_DISTRICT,
     "province" => FIELD_PROVINCE,
   }.freeze
+
+  # Chiều enum (tập đóng) lọc bằng TAG, không phải field: type/position/direction.
+  # Ánh xạ param filter → nhóm tag — dùng CHUNG group với cầu (DemandFilter.enum_*):
+  # property_types #14, positions #15, directions #17.
+  ENUM_TAG_PARAMS = %w[type position direction].freeze
+  ENUM_GROUP_PARAM = {
+    "type" => "property_types",
+    "position" => "positions",
+    "direction" => "directions",
+  }.freeze
+
+  # Chữ hiển thị (value field/parser) → tên TAG chuẩn. Loại BĐS + Vị trí phải map
+  # tay (value có dấu cách ≠ slug tag). Hướng chỉ đổi dấu cách→gạch (không cần
+  # bảng). "Tầng thương mại"/"Nhà hẻm" KHÔNG có tag → lọc rơi về field-fallback.
+  TYPE_TAG = {
+    "Nhà mặt phố" => "Nhà-mặt-tiền", "Nhà mặt tiền" => "Nhà-mặt-tiền",
+    "Văn phòng" => "Văn-phòng", "Kho, nhà xưởng" => "Kho-xưởng",
+    "Căn hộ, chung cư" => "Căn-hộ-chung-cư", "Bán đất" => "Đất",
+  }.freeze
+  POSITION_TAG = {
+    "Khu Compound" => "Khu-compound", "Đường Nội Bộ" => "Nội-bộ",
+    "Mặt tiền" => "Mặt-tiền", "Hẻm" => "Hẻm",
+  }.freeze
 end
 
 require_relative "lib/sitetor_listing/parser"
@@ -377,21 +400,18 @@ after_initialize do
         topic.custom_fields[FIELD_DISTRICT] = addr[:district] if addr[:district]
         topic.custom_fields[FIELD_PROVINCE] = addr[:province] if addr[:province]
 
-        parsed.values.any? || attrs.values.any? || addr.values.any?
-      end
+        # Enum (Loại BĐS/Vị trí/Hướng) → TAG song song với field (field GIỮ cho
+        # cột hiển thị + rollback). Backfill cũ đã gắn tag hàng loạt; đây là để
+        # tin rao MỚI/sửa vẫn có tag → hiện đúng trong bộ lọc tag /c/listing.
+        add = enum_tags_from_attrs(topic, attrs)
+        if add.any?
+          DiscourseTagging.tag_topic_by_names(
+            topic, Guardian.new(Discourse.system_user), add, append: true
+          )
+        end
 
-      # Chữ hiển thị (Attributes.extract) → tên TAG chuẩn. Loại BĐS + Vị trí phải
-      # map tay (value có dấu cách ≠ slug tag). "Tầng thương mại"/"Nhà hẻm" bỏ
-      # (không tạo tag). Hướng chỉ đổi dấu cách→gạch.
-      DEMAND_TYPE_TAG = {
-        "Nhà mặt phố" => "Nhà-mặt-tiền", "Văn phòng" => "Văn-phòng",
-        "Kho, nhà xưởng" => "Kho-xưởng", "Căn hộ, chung cư" => "Căn-hộ-chung-cư",
-        "Bán đất" => "Đất",
-      }.freeze
-      DEMAND_POSITION_TAG = {
-        "Khu Compound" => "Khu-compound", "Đường Nội Bộ" => "Nội-bộ",
-        "Mặt tiền" => "Mặt-tiền", "Hẻm" => "Hẻm",
-      }.freeze
+        parsed.values.any? || attrs.values.any? || addr.values.any? || add.any?
+      end
 
       # Nhu cầu: auto-seed khu vực (JSON field) + enum (TAG). Chỉ seed khi còn
       # trống — không thu hẹp/đè lựa chọn chủ đã nhập. Giá/mặt tiền/diện tích là
@@ -415,7 +435,7 @@ after_initialize do
         end
 
         # Enum (Loại BĐS/Vị trí/Hướng) → TAG song song.
-        add = demand_enum_tags(topic, attrs)
+        add = enum_tags_from_attrs(topic, attrs)
         if add.any?
           DiscourseTagging.tag_topic_by_names(
             topic, Guardian.new(Discourse.system_user), add, append: true
@@ -425,19 +445,19 @@ after_initialize do
         touched
       end
 
-      # Tag enum cần thêm từ attrs parse. Chỉ seed cho chiều mà topic CHƯA có tag
-      # nào trong group đó (không đè lựa chọn sẵn). Quy tắc mặc định: chọn
-      # "Nhà-mặt-tiền" ⇒ kèm Vị trí "Mặt-tiền".
-      def self.demand_enum_tags(topic, attrs)
+      # Tag enum cần thêm từ attrs parse (dùng chung cung + cầu). Chỉ seed cho
+      # chiều mà topic CHƯA có tag nào trong group đó (không đè lựa chọn sẵn).
+      # Quy tắc mặc định: chọn "Nhà-mặt-tiền" ⇒ kèm Vị trí "Mặt-tiền".
+      def self.enum_tags_from_attrs(topic, attrs)
         existing = topic.tags.map(&:name)
         empty = ->(param) { (existing & SitetorListing::DemandFilter.enum_tag_names(param)).empty? }
         out = []
 
-        if empty.call("property_types") && (tag = DEMAND_TYPE_TAG[attrs[:type]])
+        if empty.call("property_types") && (tag = SitetorListing::TYPE_TAG[attrs[:type]])
           out << tag
           out << "Mặt-tiền" if tag == "Nhà-mặt-tiền"
         end
-        if empty.call("positions") && (tag = DEMAND_POSITION_TAG[attrs[:position]])
+        if empty.call("positions") && (tag = SitetorListing::POSITION_TAG[attrs[:position]])
           out << tag
         end
         if empty.call("directions") && attrs[:direction].present?
